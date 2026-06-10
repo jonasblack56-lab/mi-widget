@@ -1,0 +1,775 @@
+/* ============================================
+   🎨 VARIABLES Y RESET
+   ============================================ */
+:root {
+  --color-primario: #02a95c;
+  --color-primario-hover: #018a4b;
+  --color-secundario: #1a4731;
+  --color-secundario-hover: #0f2d1f;
+  --color-fondo: #ffffff;
+  --color-texto: #1a1a1a;
+  --color-texto-secundario: #6b7280;
+  --color-fondo-circulo: #e5e7eb;
+  --color-boton-donar: #d4f5d4;
+  --color-texto-boton-donar: #1a1a1a;
+  --color-fondo-modal: rgba(0, 0, 0, 0.6);
+  --color-item-hover: #f3f4f6;
+  --sombra-suave: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --sombra-media: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --sombra-fuerte: 0 20px 60px rgba(0, 0, 0, 0.3);
+  --radio-borde: 12px;
+  --fuente: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--fuente);
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  line-height: 1.4;
+}
+
+/* ============================================
+   📦 CONTENEDOR PRINCIPAL - HORIZONTAL
+   ============================================ */
+.fundraising-widget {
+  background: var(--color-fondo);
+  border-radius: var(--radio-borde);
+  padding: 12px 16px;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: var(--sombra-suave);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: box-shadow 0.3s ease;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.fundraising-widget:hover {
+  box-shadow: var(--sombra-media);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   🔵 GRÁFICO CIRCULAR - COMPACTO
+   ============================================ */
+.chart-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.chart-svg {
+  transform: rotate(-90deg);
+  width: 100%;
+  height: 100%;
+}
+
+.chart-bg {
+  fill: none;
+  stroke: var(--color-fondo-circulo);
+  stroke-width: 8;
+}
+
+.chart-progress {
+  fill: none;
+  stroke: var(--color-primario);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 226.19;
+  stroke-dashoffset: 226.19;
+  transition: stroke-dashoffset 2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.percentage-display {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-texto);
+  line-height: 1;
+}
+
+.percentage-display .percent-symbol {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ============================================
+   📊 INFORMACIÓN - COMPACTA
+   ============================================ */
+.info-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.raised-amount {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-texto);
+  margin-bottom: 2px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.goal-amount {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-texto-secundario);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.goal-amount .goal-value {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.donors-info {
+  font-size: 12px;
+  color: var(--color-texto);
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 4px 8px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.donors-info:hover {
+  background: #f3f4f6;
+  border-color: var(--color-primario);
+}
+
+.donors-info:focus {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 1px;
+}
+
+.donors-info .arrow {
+  display: inline-block;
+  margin-left: 2px;
+  transition: transform 0.2s;
+}
+
+.donors-info:hover .arrow {
+  transform: translateX(2px);
+}
+
+/* ============================================
+   🔘 BOTONES - COMPACTOS
+   ============================================ */
+.buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: var(--fuente);
+  white-space: nowrap;
+  min-width: 80px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-donar {
+  background: var(--color-boton-donar);
+  color: var(--color-texto-boton-donar);
+}
+
+.btn-donar:hover,
+.btn-donar:active {
+  background: var(--color-primario);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(2, 169, 92, 0.3);
+}
+
+.btn-compartir {
+  background: var(--color-secundario);
+  color: white;
+}
+
+.btn-compartir:hover,
+.btn-compartir:active {
+  background: var(--color-secundario-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 71, 49, 0.3);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn:focus {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   🎭 MODAL DE DONANTES
+   ============================================ */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--color-fondo-modal);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: var(--color-fondo);
+  border-radius: var(--radio-borde);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: var(--sombra-fuerte);
+  transform: scale(0.9) translateY(20px);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-overlay.active .modal-content {
+  transform: scale(1) translateY(0);
+}
+
+.modal-header {
+  padding: 20px;
+  border-bottom: 2px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  flex-shrink: 0;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-texto);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-title .icon {
+  font-size: 24px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: var(--color-texto-secundario);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.modal-close:hover {
+  background: #f3f4f6;
+  color: var(--color-texto);
+  transform: rotate(90deg);
+}
+
+.modal-close:focus {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 2px;
+}
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+.donors-list {
+  list-style: none;
+}
+
+.donor-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 10px;
+  background: #f9fafb;
+  border-radius: 10px;
+  transition: all 0.2s;
+  border-left: 3px solid var(--color-primario);
+  animation: slideIn 0.4s ease forwards;
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.donor-item:hover {
+  background: var(--color-item-hover);
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.donor-item:nth-child(1) { border-left-color: #fbbf24; }
+.donor-item:nth-child(2) { border-left-color: #9ca3af; }
+.donor-item:nth-child(3) { border-left-color: #b45309; }
+
+.donor-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.donor-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primario), #059669);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.donor-item:nth-child(1) .donor-avatar {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+
+.donor-item:nth-child(2) .donor-avatar {
+  background: linear-gradient(135deg, #9ca3af, #6b7280);
+}
+
+.donor-item:nth-child(3) .donor-avatar {
+  background: linear-gradient(135deg, #b45309, #92400e);
+}
+
+.donor-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  flex: 1;
+}
+
+.donor-name {
+  font-weight: 600;
+  color: var(--color-texto);
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.donor-message {
+  font-size: 12px;
+  color: var(--color-texto-secundario);
+  margin-top: 2px;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.donor-amount {
+  font-weight: 700;
+  color: var(--color-primario);
+  font-size: 16px;
+  white-space: nowrap;
+  margin-left: 10px;
+  flex-shrink: 0;
+}
+
+.modal-footer {
+  padding: 14px 20px;
+  border-top: 2px solid #f3f4f6;
+  text-align: center;
+  background: #f9fafb;
+  font-size: 13px;
+  color: var(--color-texto-secundario);
+  flex-shrink: 0;
+}
+
+@keyframes slideIn {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: var(--color-primario);
+  border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primario-hover);
+}
+
+/* ============================================
+   📱 MÓVILES PEQUEÑOS (hasta 480px)
+   ============================================ */
+@media (max-width: 480px) {
+  body {
+    padding: 8px;
+    align-items: flex-start;
+    padding-top: 16px;
+  }
+
+  .fundraising-widget {
+    padding: 10px 12px;
+    gap: 12px;
+  }
+
+  .chart-container {
+    width: 70px;
+    height: 70px;
+  }
+
+  .chart-bg,
+  .chart-progress {
+    stroke-width: 7;
+  }
+
+  .percentage-display {
+    font-size: 18px;
+  }
+
+  .percentage-display .percent-symbol {
+    font-size: 11px;
+  }
+
+  .raised-amount {
+    font-size: 14px;
+  }
+
+  .goal-amount {
+    font-size: 12px;
+  }
+
+  .donors-info {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+
+  .btn {
+    padding: 7px 12px;
+    font-size: 12px;
+    min-width: 70px;
+  }
+
+  .modal-overlay {
+    padding: 10px;
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    max-height: 85vh;
+    border-radius: var(--radio-borde) var(--radio-borde) 0 0;
+    transform: translateY(100%);
+  }
+
+  .modal-overlay.active .modal-content {
+    transform: translateY(0);
+  }
+
+  .modal-header {
+    padding: 16px;
+  }
+
+  .modal-title {
+    font-size: 18px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .donor-item {
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+
+  .donor-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+
+  .donor-name {
+    font-size: 13px;
+  }
+
+  .donor-message {
+    font-size: 11px;
+  }
+
+  .donor-amount {
+    font-size: 15px;
+    margin-left: 8px;
+  }
+
+  .modal-footer {
+    padding: 12px 16px;
+    font-size: 12px;
+  }
+}
+
+/* ============================================
+   💻 TABLETS Y ESCRITORIOS (481px+)
+   ============================================ */
+@media (min-width: 481px) {
+  .fundraising-widget {
+    padding: 14px 20px;
+    gap: 20px;
+  }
+
+  .chart-container {
+    width: 90px;
+    height: 90px;
+  }
+
+  .chart-bg,
+  .chart-progress {
+    stroke-width: 9;
+  }
+
+  .percentage-display {
+    font-size: 22px;
+  }
+
+  .raised-amount {
+    font-size: 18px;
+  }
+
+  .goal-amount {
+    font-size: 14px;
+  }
+
+  .donors-info {
+    font-size: 13px;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    min-width: 90px;
+  }
+}
+
+/* ============================================
+   💻 ESCRITORIOS GRANDES (1024px+)
+   ============================================ */
+@media (min-width: 1024px) {
+  .fundraising-widget {
+    padding: 16px 24px;
+    gap: 24px;
+    max-width: 700px;
+  }
+
+  .chart-container {
+    width: 100px;
+    height: 100px;
+  }
+
+  .chart-bg,
+  .chart-progress {
+    stroke-width: 10;
+  }
+
+  .percentage-display {
+    font-size: 24px;
+  }
+
+  .raised-amount {
+    font-size: 20px;
+  }
+
+  .goal-amount {
+    font-size: 15px;
+  }
+
+  .donors-info {
+    font-size: 14px;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    font-size: 15px;
+    min-width: 100px;
+  }
+
+  .donor-item {
+    padding: 14px;
+  }
+
+  .donor-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 15px;
+  }
+
+  .donor-name {
+    font-size: 15px;
+  }
+
+  .donor-amount {
+    font-size: 17px;
+  }
+}
+
+/* ============================================
+   🌙 MODO OSCURO
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-fondo: #1a1a1a;
+    --color-texto: #ffffff;
+    --color-texto-secundario: #9ca3af;
+    --color-fondo-circulo: #374151;
+    --color-boton-donar: #065f46;
+    --color-texto-boton-donar: #ffffff;
+    --color-item-hover: #2d2d2d;
+  }
+
+  body {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  }
+
+  .donors-info {
+    background: #2d2d2d;
+  }
+
+  .donors-info:hover {
+    background: #374151;
+  }
+
+  .modal-header {
+    background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+  }
+
+  .modal-title {
+    color: white;
+  }
+
+  .donor-item {
+    background: #2d2d2d;
+  }
+
+  .donor-item:hover {
+    background: #374151;
+  }
+
+  .modal-footer {
+    background: #2d2d2d;
+  }
+
+  .modal-body::-webkit-scrollbar-track {
+    background: #374151;
+  }
+}
+
+/* ============================================
+   ♿ ACCESIBILIDAD
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  body {
+    background: white;
+    padding: 0;
+  }
+
+  .fundraising-widget {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+
+  .btn,
+  .modal-overlay {
+    display: none;
+  }
+}
+

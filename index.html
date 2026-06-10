@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="theme-color" content="#02a95c">
+  <title>Mi Página con Widget de Recaudación</title>
+  
+  <!-- 👇 ENLAZAR EL CSS DEL WIDGET -->
+  <link rel="stylesheet" href="widget.css">
+</head>
+<body>
+
+  <!-- Tu contenido de la página -->
+  <header>
+    <h1>Mi Página Web</h1>
+    <p>Bienvenido a mi sitio de recaudación</p>
+  </header>
+
+  <!-- 👇 WIDGET DE RECAUDACIÓN -->
+  <div class="fundraising-widget">
+    
+    <div class="chart-container">
+      <svg class="chart-svg" viewBox="0 0 80 80">
+        <circle class="chart-bg" cx="40" cy="40" r="36" />
+        <circle class="chart-progress" id="progressRing" cx="40" cy="40" r="36" />
+      </svg>
+      <div class="percentage-display">
+        <span id="percentValue">0</span><span class="percent-symbol">%</span>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div class="raised-amount">
+        Se recaudaron <span id="raisedValue">$0</span>
+      </div>
+      <div class="goal-amount">
+        de <span class="goal-value" id="goalValue">$0</span>
+      </div>
+      <div class="donors-info" onclick="openDonorsModal()" tabindex="0" onkeypress="handleKeyPress(event)" role="button" aria-label="Ver lista de donantes">
+        <span id="donorName">Christine Helse...</span> y otras
+        <span id="donorCount">0</span> personas donaron
+        <span class="arrow">›</span>
+      </div>
+    </div>
+
+    <div class="buttons-container">
+      <button class="btn btn-donar" onclick="handleDonate()" aria-label="Donar ahora">Donar</button>
+      <button class="btn btn-compartir" onclick="handleShare()" aria-label="Compartir campaña">Compartir</button>
+    </div>
+
+  </div>
+
+  <!-- 👇 MODAL DE DONANTES -->
+  <div class="modal-overlay" id="donorsModal" onclick="closeModalOnOverlay(event)" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">
+          <span class="icon">👥</span>
+          Personas que donaron
+        </h2>
+        <button class="modal-close" onclick="closeDonorsModal()" aria-label="Cerrar modal">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <ul class="donors-list" id="donorsList" role="list">
+          <!-- Los donantes se insertan aquí dinámicamente -->
+        </ul>
+      </div>
+      
+      <div class="modal-footer">
+        Total: <strong id="totalDonorsModal">0</strong> personas han contribuido
+      </div>
+    </div>
+  </div>
+
+  <!-- 👇 ENLAZAR EL JAVASCRIPT DEL WIDGET (al final del body) -->
+  <script src="widget.js"></script>
+
+</body>
+</html>
