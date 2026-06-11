@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>¡Gracias por tu Donación!</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
@@ -22,13 +18,10 @@
             overflow: hidden;
         }
 
-        /* Confeti */
         .confetti-container {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             pointer-events: none;
             overflow: hidden;
             z-index: 1;
@@ -44,17 +37,10 @@
         }
 
         @keyframes confettiFall {
-            0% {
-                transform: translateY(0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(110vh) rotate(720deg);
-                opacity: 0.3;
-            }
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0.3; }
         }
 
-        /* Contenido principal */
         .thankyou-content {
             background: white;
             border-radius: 24px;
@@ -69,20 +55,12 @@
         }
 
         @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px) scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+            from { opacity: 0; transform: translateY(30px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* Icono de check */
         .thankyou-icon-wrapper {
-            width: 100px;
-            height: 100px;
+            width: 100px; height: 100px;
             margin: 0 auto 20px;
             background: linear-gradient(135deg, #d4f5d4 0%, #a7e9af 100%);
             border-radius: 50%;
@@ -101,8 +79,7 @@
         .thankyou-icon-wrapper::before {
             content: '';
             position: absolute;
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             border-radius: 50%;
             background: linear-gradient(135deg, #d4f5d4 0%, #a7e9af 100%);
             animation: iconRipple 2s ease-out infinite;
@@ -110,14 +87,8 @@
         }
 
         @keyframes iconRipple {
-            0% {
-                transform: scale(1);
-                opacity: 0.6;
-            }
-            100% {
-                transform: scale(1.5);
-                opacity: 0;
-            }
+            0% { transform: scale(1); opacity: 0.6; }
+            100% { transform: scale(1.5); opacity: 0; }
         }
 
         .thankyou-icon {
@@ -184,8 +155,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 32px;
-            height: 32px;
+            width: 32px; height: 32px;
             background: #02a95c;
             color: white;
             border-radius: 50%;
@@ -215,7 +185,7 @@
             background: linear-gradient(90deg, #02a95c 0%, #02c96d 100%);
             width: 100%;
             transform-origin: left;
-            animation: progressShrink 5s linear forwards;
+            animation: progressShrink 15s linear forwards;
             border-radius: 3px;
         }
 
@@ -259,106 +229,42 @@
             cursor: pointer;
         }
 
-        .thankyou-share a:hover {
-            text-decoration: underline;
-        }
+        .thankyou-share a:hover { text-decoration: underline; }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Responsive */
         @media (max-width: 480px) {
-            .thankyou-content {
-                padding: 32px 24px;
-                border-radius: 20px;
-            }
-            
-            .thankyou-icon-wrapper {
-                width: 80px;
-                height: 80px;
-            }
-            
-            .thankyou-icon {
-                font-size: 40px;
-            }
-            
-            .thankyou-title {
-                font-size: 24px;
-            }
-            
-            .thankyou-message {
-                font-size: 15px;
-            }
-            
-            .thankyou-amount {
-                font-size: 30px;
-            }
-            
-            .thankyou-amount-box {
-                padding: 14px 18px;
-            }
+            .thankyou-content { padding: 32px 24px; border-radius: 20px; }
+            .thankyou-icon-wrapper { width: 80px; height: 80px; }
+            .thankyou-icon { font-size: 40px; }
+            .thankyou-title { font-size: 24px; }
+            .thankyou-message { font-size: 15px; }
+            .thankyou-amount { font-size: 30px; }
+            .thankyou-amount-box { padding: 14px 18px; }
         }
 
         @media (max-width: 360px) {
-            .thankyou-content {
-                padding: 28px 20px;
-            }
-            
-            .thankyou-title {
-                font-size: 22px;
-            }
-            
-            .thankyou-amount {
-                font-size: 26px;
-            }
+            .thankyou-content { padding: 28px 20px; }
+            .thankyou-title { font-size: 22px; }
+            .thankyou-amount { font-size: 26px; }
         }
 
-        /* Modo oscuro */
         @media (prefers-color-scheme: dark) {
-            body {
-                background: linear-gradient(135deg, #065f46 0%, #047857 100%);
-            }
-            
-            .thankyou-content {
-                background: #1f2937;
-            }
-            
-            .thankyou-title {
-                color: white;
-            }
-            
-            .thankyou-message {
-                color: #d1d5db;
-            }
-            
+            body { background: linear-gradient(135deg, #065f46 0%, #047857 100%); }
+            .thankyou-content { background: #1f2937; }
+            .thankyou-title { color: white; }
+            .thankyou-message { color: #d1d5db; }
             .thankyou-amount-box {
                 background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
                 border-color: #10b981;
             }
-            
-            .thankyou-amount-label {
-                color: #a7f3d0;
-            }
-            
-            .thankyou-redirect {
-                color: #d1d5db;
-            }
-            
-            .thankyou-progress-bar {
-                background: #374151;
-            }
-            
-            .thankyou-share {
-                color: #d1d5db;
-            }
+            .thankyou-amount-label { color: #a7f3d0; }
+            .thankyou-redirect { color: #d1d5db; }
+            .thankyou-progress-bar { background: #374151; }
+            .thankyou-share { color: #d1d5db; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -371,10 +277,8 @@
     </style>
 </head>
 <body>
-    <!-- Confeti -->
     <div class="confetti-container" id="confettiContainer"></div>
 
-    <!-- Contenido principal -->
     <div class="thankyou-content">
         <div class="thankyou-icon-wrapper">
             <span class="thankyou-icon">✅</span>
@@ -392,7 +296,7 @@
         </div>
         
         <div class="thankyou-redirect" id="thankyouRedirect">
-            Serás redirigido automáticamente en <span class="thankyou-countdown" id="thankyouCountdown">5</span> segundos
+            Serás redirigido automáticamente en <span class="thankyou-countdown" id="thankyouCountdown">15</span> segundos
         </div>
         
         <div class="thankyou-progress-bar">
@@ -408,19 +312,18 @@
         </div>
     </div>
 
-    <!-- Stripe JS -->
-    <script src="https://js.stripe.com/v3/"></script>
     <script>
         // ============================================
         // CONFIGURACIÓN
         // ============================================
         const REDIRECT_URL = 'https://gohelpyou.com'; // 👈 URL de tu página principal
-        const REDIRECT_SECONDS = 15;
         
-        // ✅ ENDPOINT BACKEND EN RENDER (ya configurado)
+        // ⚠️ IMPORTANTE: Esta URL debe coincidir con tu backend en Render
+        // Asegúrate de que NO tenga "https://https://" (doble protocolo)
         const BACKEND_SESSION_ENDPOINT = 'https://stripe-backend-luis.onrender.com/api/get-stripe-session';
         
-        // Traducciones
+        const REDIRECT_SECONDS = 15;
+        
         const translations = {
             es: {
                 title: "¡Gracias por tu generosidad!",
@@ -446,27 +349,16 @@
             }
         };
 
-        // Detectar idioma
         function detectLanguage() {
             const savedLang = localStorage.getItem('gofundme_lang');
-            if (savedLang && (savedLang === 'es' || savedLang === 'en')) {
-                return savedLang;
-            }
-            
+            if (savedLang && (savedLang === 'es' || savedLang === 'en')) return savedLang;
             const browserLang = navigator.language || navigator.userLanguage || 'es';
             const langCode = browserLang.toLowerCase().split('-')[0];
-            
-            if (langCode === 'en') return 'en';
-            if (langCode === 'es') return 'es';
-            
-            return 'es';
+            return (langCode === 'en') ? 'en' : 'es';
         }
 
         let currentLang = detectLanguage();
-
-        function t(key) {
-            return translations[currentLang][key] || key;
-        }
+        function t(key) { return translations[currentLang][key] || key; }
 
         function applyTranslations() {
             document.getElementById('thankyouTitle').textContent = t('title');
@@ -481,18 +373,15 @@
             shareText.innerHTML = `${t('share')} <a onclick="shareAfterDonation()" id="thankyouShareLink">${t('shareLink')}</a>`;
         }
 
-        // Crear confeti
         function createConfetti() {
             const container = document.getElementById('confettiContainer');
             container.innerHTML = '';
-            
             const colors = ['#02a95c', '#fbbf24', '#ef4444', '#3b82f6', '#a855f7', '#ec4899', '#10b981'];
             const shapes = ['circle', 'square'];
             
             for (let i = 0; i < 60; i++) {
                 const confetti = document.createElement('div');
                 confetti.className = 'confetti';
-                
                 const color = colors[Math.floor(Math.random() * colors.length)];
                 const shape = shapes[Math.floor(Math.random() * shapes.length)];
                 const size = Math.random() * 10 + 6;
@@ -504,12 +393,10 @@
                 confetti.style.borderRadius = shape === 'circle' ? '50%' : '2px';
                 confetti.style.animationDuration = (Math.random() * 2 + 3) + 's';
                 confetti.style.animationDelay = (Math.random() * 2) + 's';
-                
                 container.appendChild(confetti);
             }
         }
 
-        // Countdown y redirección
         let countdownInterval = null;
         let countdownValue = REDIRECT_SECONDS;
 
@@ -518,17 +405,13 @@
             const countdownEl = document.getElementById('thankyouCountdown');
             const progressFill = document.getElementById('thankyouProgressFill');
             
-            // Reiniciar animación de la barra
             progressFill.style.animation = 'none';
             void progressFill.offsetWidth;
             progressFill.style.animation = `progressShrink ${REDIRECT_SECONDS}s linear forwards`;
             
             countdownInterval = setInterval(() => {
                 countdownValue--;
-                if (countdownEl) {
-                    countdownEl.textContent = countdownValue;
-                }
-                
+                if (countdownEl) countdownEl.textContent = countdownValue;
                 if (countdownValue <= 0) {
                     clearInterval(countdownInterval);
                     redirectNow();
@@ -536,29 +419,22 @@
             }, 1000);
         }
 
-        // Redirigir
         function redirectNow() {
             if (countdownInterval) {
                 clearInterval(countdownInterval);
                 countdownInterval = null;
             }
-            
-            // Limpiar sessionStorage
             sessionStorage.removeItem('lastDonationTotal');
             sessionStorage.removeItem('stripeSessionId');
-            
-            // Redirigir
             window.location.href = REDIRECT_URL;
         }
 
-        // Compartir
         function shareAfterDonation() {
             const shareData = {
-                title: "Ayuda a cumplir el sueño de Luis",
+                title: "Ayuda a cumplir el sueño de Mireya",
                 text: "Acabo de donar a esta campaña. ¡Únete y ayuda a cumplir sueños!",
                 url: window.location.origin + REDIRECT_URL,
             };
-
             if (navigator.share) {
                 navigator.share(shareData).catch(() => {});
             } else {
@@ -596,7 +472,6 @@
 
                 const data = await response.json();
                 
-                // Stripe devuelve amount_total en centavos
                 if (data.amount_total && data.currency) {
                     amountEl.textContent = formatAmount(data.amount_total, data.currency);
                 } else if (data.amount !== undefined) {
@@ -606,7 +481,6 @@
                 }
             } catch (err) {
                 console.warn('No se pudo obtener el monto real de Stripe, usando fallback:', err);
-                // Fallback: usar el amount de la URL si existe
                 if (fallbackAmount) {
                     amountEl.textContent = '$' + parseFloat(fallbackAmount).toFixed(2);
                 } else {
@@ -619,21 +493,17 @@
         // INICIALIZACIÓN
         // ============================================
         document.addEventListener('DOMContentLoaded', () => {
-            // Obtener parámetros de la URL
             const urlParams = new URLSearchParams(window.location.search);
-            const sessionId = urlParams.get('session_id');        // 👈 Stripe lo agrega automáticamente
-            const fallbackAmount = urlParams.get('amount');       // 👈 Respuesta de emergencia
+            const sessionId = urlParams.get('session_id');
+            const fallbackAmount = urlParams.get('amount');
             
-            // Aplicar UI
             applyTranslations();
             createConfetti();
             startCountdown();
             
-            // Obtener el monto real pagado con Stripe
             if (sessionId) {
                 fetchRealAmountFromStripe(sessionId, fallbackAmount);
             } else if (fallbackAmount) {
-                // Fallback si no hay session_id (pruebas locales)
                 document.getElementById('thankyouAmount').textContent = 
                     '$' + parseFloat(fallbackAmount).toFixed(2);
             } else {
@@ -641,11 +511,8 @@
             }
         });
 
-        // Tecla ESC para salir
         document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                redirectNow();
-            }
+            if (event.key === 'Escape') redirectNow();
         });
     </script>
 </body>
