@@ -2,80 +2,2379 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-  <meta name="theme-color" content="#02a95c">
-  <title>Mi Página con Widget de Recaudación</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Widget de Recaudación - Con Pagos Stripe</title>
   
-  <!-- 👇 ENLAZAR EL CSS DEL WIDGET -->
-  <link rel="stylesheet" href="widget.css">
+  <style>
+    :root {
+      --color-primario: #02a95c;
+      --color-primario-hover: #018a4b;
+      --color-secundario: #1a4731;
+      --color-secundario-hover: #0f2d1f;
+      --color-fondo: #ffffff;
+      --color-texto: #1a1a1a;
+      --color-texto-secundario: #6b7280;
+      --color-fondo-circulo: #e5e7eb;
+      --color-boton-donar: #d4f5d4;
+      --color-texto-boton-donar: #1a1a1a;
+      --color-fondo-modal: rgba(0, 0, 0, 0.6);
+      --color-item-hover: #f3f4f6;
+      --sombra-suave: 0 2px 12px rgba(0, 0, 0, 0.08);
+      --sombra-media: 0 4px 16px rgba(0, 0, 0, 0.12);
+      --sombra-fuerte: 0 20px 60px rgba(0, 0, 0, 0.3);
+      --radio-borde: 12px;
+      --fuente: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      
+      --hero-height-desktop: 480px;
+      --hero-height-tablet: 400px;
+      --hero-height-mobile: 320px;
+      --hero-height-mobile-small: 280px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+
+    body {
+      font-family: var(--fuente);
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      line-height: 1.4;
+    }
+
+    .fundraising-widget {
+      background: var(--color-fondo);
+      border-radius: var(--radio-borde);
+      width: 100%;
+      max-width: 650px;
+      margin: 0 auto;
+      box-shadow: var(--sombra-suave);
+      overflow: hidden;
+      transition: box-shadow 0.3s ease;
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    .fundraising-widget:hover { box-shadow: var(--sombra-media); }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .widget-header {
+      background: #ffffff;
+      padding: 20px 28px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .widget-logo {
+      font-size: 34px;
+      font-weight: 700;
+      color: var(--color-primario);
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .widget-logo-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--color-primario);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .campaign-hero {
+      position: relative;
+      width: 100%;
+      height: var(--hero-height-desktop);
+      overflow: hidden;
+      background: #1a1a1a;
+    }
+
+    .carousel-container { position: relative; width: 100%; height: 100%; }
+
+    .carousel-slides {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .carousel-slide {
+      min-width: 100%;
+      height: 100%;
+      position: relative;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .carousel-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center center;
+      display: block;
+      filter: brightness(1.02) contrast(1.03);
+      transform: scale(1.02);
+      transition: transform 8s ease-out;
+    }
+
+    .carousel-slide.active img { transform: scale(1.05); }
+
+    .hero-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(0, 0, 0, 0.05) 40%,
+        rgba(0, 0, 0, 0.4) 65%,
+        rgba(0, 0, 0, 0.85) 100%
+      );
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .hero-title {
+      position: absolute;
+      bottom: 70px;
+      left: 0;
+      right: 0;
+      z-index: 3;
+      text-align: center;
+      padding: 0 30px;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .hero-title h2 {
+      font-size: 32px;
+      font-weight: 800;
+      color: #ffffff;
+      margin: 0;
+      line-height: 1.25;
+      text-shadow: 0 3px 15px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.8);
+      max-width: 600px;
+      letter-spacing: -0.5px;
+    }
+
+    .campaign-badge {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: var(--color-primario);
+      color: white;
+      padding: 10px 16px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 4;
+    }
+
+    .carousel-counter {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 8px 14px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 4;
+      backdrop-filter: blur(10px);
+    }
+
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--color-texto);
+      width: 48px;
+      height: 48px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 700;
+      z-index: 5;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+    }
+
+    .campaign-hero:hover .carousel-nav { opacity: 1; }
+    .carousel-nav:hover { background: white; transform: translateY(-50%) scale(1.1); }
+    .carousel-prev { left: 20px; }
+    .carousel-next { right: 20px; }
+
+    .carousel-dots {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 5;
+      padding: 10px 16px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 24px;
+      backdrop-filter: blur(10px);
+    }
+
+    .carousel-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+      padding: 0;
+    }
+
+    .carousel-dot.active { background: white; width: 32px; border-radius: 6px; }
+
+    .carousel-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      background: var(--color-primario);
+      z-index: 6;
+      width: 0;
+      transition: width 0.1s linear;
+    }
+
+    .carousel-progress.animating { transition: width 5s linear; width: 100%; }
+
+    @media (max-width: 1024px) and (min-width: 481px) {
+      .campaign-hero { height: var(--hero-height-tablet); }
+      .hero-title { bottom: 65px; padding: 0 26px; }
+      .hero-title h2 { font-size: 28px; }
+      .carousel-nav { width: 44px; height: 44px; font-size: 20px; }
+    }
+
+    @media (max-width: 767px) and (min-width: 481px) {
+      .campaign-hero { height: var(--hero-height-tablet); }
+      .hero-title { bottom: 60px; padding: 0 22px; }
+      .hero-title h2 { font-size: 24px; }
+      .campaign-badge { top: 16px; left: 16px; padding: 8px 14px; font-size: 13px; }
+      .carousel-counter { top: 16px; right: 16px; padding: 6px 12px; font-size: 12px; }
+      .carousel-nav { width: 40px; height: 40px; font-size: 18px; opacity: 1; }
+      .carousel-prev { left: 14px; }
+      .carousel-next { right: 14px; }
+      .carousel-dots { bottom: 20px; gap: 8px; padding: 8px 14px; }
+      .carousel-dot { width: 10px; height: 10px; }
+      .carousel-dot.active { width: 28px; }
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 8px; align-items: center; justify-content: center; min-height: 100vh; }
+      .fundraising-widget { margin: 0 auto; width: calc(100% - 16px); border-radius: 10px; }
+      .widget-header { padding: 16px 20px; }
+      .widget-logo { font-size: 28px; gap: 8px; }
+      .widget-logo-icon { width: 34px; height: 34px; font-size: 19px; border-radius: 8px; }
+      .campaign-hero { height: var(--hero-height-mobile); }
+      .hero-title { bottom: 55px; padding: 0 18px; }
+      .hero-title h2 { font-size: 21px; }
+      .campaign-badge { top: 14px; left: 14px; padding: 7px 12px; font-size: 12px; border-radius: 20px; }
+      .carousel-counter { top: 14px; right: 14px; padding: 6px 10px; font-size: 11px; border-radius: 18px; }
+      .carousel-nav { width: 38px; height: 38px; font-size: 18px; opacity: 1; }
+      .carousel-prev { left: 12px; }
+      .carousel-next { right: 12px; }
+      .carousel-dots { bottom: 18px; gap: 7px; padding: 7px 12px; border-radius: 20px; }
+      .carousel-dot { width: 9px; height: 9px; }
+      .carousel-dot.active { width: 24px; border-radius: 5px; }
+      .carousel-progress { height: 3px; }
+    }
+
+    @media (max-width: 360px) {
+      .campaign-hero { height: var(--hero-height-mobile-small); }
+      .hero-title { bottom: 50px; padding: 0 16px; }
+      .hero-title h2 { font-size: 19px; }
+      .carousel-nav { width: 34px; height: 34px; font-size: 16px; }
+      .widget-header { padding: 14px 16px; }
+      .widget-logo { font-size: 26px; gap: 7px; }
+      .widget-logo-icon { width: 32px; height: 32px; font-size: 18px; }
+    }
+
+    @media (max-height: 500px) and (orientation: landscape) {
+      body { padding: 8px; align-items: center; justify-content: center; }
+      .fundraising-widget { margin: 0 auto; }
+      .campaign-hero { height: 240px; }
+      .hero-title { bottom: 45px; padding: 0 16px; }
+      .hero-title h2 { font-size: 19px; }
+      .carousel-nav { width: 36px; height: 36px; font-size: 16px; opacity: 1; }
+    }
+
+    @media (min-width: 1200px) {
+      .fundraising-widget { max-width: 750px; }
+      .campaign-hero { height: 520px; }
+      .hero-title { bottom: 75px; padding: 0 40px; }
+      .hero-title h2 { font-size: 36px; }
+      .carousel-nav { width: 52px; height: 52px; font-size: 24px; }
+    }
+
+    .widget-content { padding: 18px 24px 16px; display: flex; align-items: center; gap: 18px; }
+
+    .chart-container {
+      position: relative;
+      width: 85px;
+      height: 85px;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      border-radius: 50%;
+    }
+
+    .chart-container:hover { transform: scale(1.08); }
+    .chart-container:active { transform: scale(0.98); }
+    .chart-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+    .chart-bg { fill: none; stroke: var(--color-fondo-circulo); stroke-width: 8; }
+
+    .chart-progress {
+      fill: none;
+      stroke: var(--color-primario);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: 235.62;
+      stroke-dashoffset: 235.62;
+      transition: stroke-dashoffset 2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .percentage-display {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--color-texto);
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .percentage-display .percent-symbol { font-size: 13px; font-weight: 600; }
+    .info-section { flex: 1; min-width: 0; }
+
+    .raised-amount {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--color-texto);
+      margin-bottom: 3px;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .goal-amount {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--color-texto-secundario);
+      margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .goal-amount .goal-value { text-decoration: underline; text-underline-offset: 2px; }
+
+    .donors-info {
+      font-size: 13px;
+      color: var(--color-texto);
+      cursor: pointer;
+      transition: all 0.2s;
+      padding: 5px 10px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: inline-block;
+      position: relative;
+    }
+
+    .donors-info:hover { background: #f3f4f6; border-color: var(--color-primario); }
+    .donor-carousel { display: inline; position: relative; }
+
+    .donor-carousel-item {
+      display: inline;
+      opacity: 0;
+      transition: opacity 0.6s ease-in-out;
+      position: absolute;
+      left: 0;
+      top: 0;
+      white-space: nowrap;
+    }
+
+    .donor-carousel-item.active { opacity: 1; position: relative; }
+    .donors-info .arrow { display: inline-block; margin-left: 3px; transition: transform 0.2s; }
+    .donors-info:hover .arrow { transform: translateX(3px); }
+    .donors-carousel-indicators { display: flex; gap: 4px; margin-top: 4px; justify-content: center; }
+
+    .donors-carousel-indicators .carousel-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #d1d5db;
+      transition: all 0.3s;
+      cursor: default;
+    }
+
+    .donors-carousel-indicators .carousel-dot.active {
+      background: var(--color-primario);
+      transform: scale(1.3);
+      width: 6px;
+      border-radius: 50%;
+    }
+
+    .buttons-container {
+      padding: 0 24px 20px;
+      display: flex;
+      flex-direction: row;
+      gap: 12px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: var(--fuente);
+      white-space: nowrap;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-donar { background: var(--color-boton-donar); color: var(--color-texto-boton-donar); }
+    .btn-donar:hover {
+      background: var(--color-primario);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(2, 169, 92, 0.4);
+    }
+    .btn-compartir { background: var(--color-secundario); color: white; }
+    .btn-compartir:hover {
+      background: var(--color-secundario-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(26, 71, 49, 0.4);
+    }
+    .btn:active { transform: translateY(0); }
+
+    .campaign-description { padding: 20px 24px; background: #fafafa; }
+    .description-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .description-icon { font-size: 22px; }
+    .description-title { font-size: 17px; font-weight: 700; color: var(--color-texto); }
+
+    .description-content {
+      position: relative;
+      max-height: 90px;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+    .description-content.expanded { max-height: 1000px; }
+    .description-text { font-size: 14px; line-height: 1.7; color: var(--color-texto); }
+    .description-text p { margin-bottom: 12px; }
+    .description-text p:last-child { margin-bottom: 0; }
+    .description-text ul { margin: 10px 0; padding-left: 24px; }
+    .description-text ul li { margin-bottom: 6px; line-height: 1.5; }
+
+    .description-fade {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 50px;
+      background: linear-gradient(to bottom, transparent, #fafafa);
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .description-content.expanded .description-fade { opacity: 0; }
+
+    .description-toggle {
+      margin-top: 12px;
+      background: none;
+      border: 2px solid var(--color-primario);
+      color: var(--color-primario);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 8px 20px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s;
+    }
+    .description-toggle:hover {
+      background: var(--color-primario);
+      color: white;
+      transform: translateY(-2px);
+    }
+    .description-toggle .arrow { display: inline-block; transition: transform 0.3s; }
+    .description-content.expanded + .description-toggle .arrow { transform: rotate(180deg); }
+
+    .donations-section { padding: 24px; background: white; border-top: 1px solid #f3f4f6; }
+    .donations-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .donations-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--color-texto);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .donations-count {
+      background: #f3f4f6;
+      color: var(--color-texto);
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .btn-featured {
+      background: white;
+      border: 1px solid #d1d5db;
+      color: var(--color-texto);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-featured:hover {
+      background: #f9fafb;
+      border-color: var(--color-primario);
+      color: var(--color-primario);
+    }
+    .recent-donations-label {
+      color: #7c3aed;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .donation-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .donation-item:last-child { border-bottom: none; }
+    .donation-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .donation-avatar.heart { background: #fef3c7; }
+    .donation-avatar.letter {
+      background: var(--color-primario);
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .donation-info { flex: 1; min-width: 0; }
+    .donation-name { font-size: 15px; font-weight: 600; color: var(--color-texto); margin-bottom: 2px; }
+    .donation-details { font-size: 14px; color: var(--color-texto-secundario); }
+
+    .btn-view-all {
+      width: 100%;
+      padding: 14px;
+      margin-top: 16px;
+      border: 2px solid var(--color-primario);
+      background: white;
+      color: var(--color-primario);
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-view-all:hover {
+      background: var(--color-primario);
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .fundraising-card {
+      margin: 20px 24px 24px;
+      padding: 24px;
+      background: white;
+      border-radius: var(--radio-borde);
+      box-shadow: var(--sombra-suave);
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .fundraising-card.visible { opacity: 1; transform: translateY(0); }
+    .fundraising-card-content { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
+    .card-chart-container { position: relative; width: 85px; height: 85px; flex-shrink: 0; }
+    .card-chart-container svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+    .card-chart-container .chart-bg { fill: none; stroke: var(--color-fondo-circulo); stroke-width: 8; }
+    .card-chart-container .chart-progress {
+      fill: none;
+      stroke: var(--color-primario);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: 235.62;
+      stroke-dashoffset: 235.62;
+      transition: stroke-dashoffset 2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .card-chart-container .percentage {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--color-texto);
+      line-height: 1;
+    }
+    .card-chart-container .percent-symbol { font-size: 13px; font-weight: 600; }
+    .fundraising-info { flex: 1; }
+    .fundraising-amount { font-size: 24px; font-weight: 800; color: var(--color-texto); margin-bottom: 4px; }
+    .fundraising-goal { font-size: 18px; color: var(--color-texto-secundario); margin-bottom: 8px; }
+    .fundraising-goal .goal-amount { text-decoration: underline; }
+    .fundraising-recent {
+      font-size: 14px;
+      color: var(--color-texto);
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .fundraising-recent:hover { color: var(--color-primario); }
+    .fundraising-buttons { display: flex; gap: 12px; }
+    .btn-large {
+      flex: 1;
+      padding: 16px 24px;
+      border: none;
+      border-radius: 30px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-donate-large { background: #bef264; color: var(--color-texto); }
+    .btn-donate-large:hover {
+      background: var(--color-primario);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(2, 169, 92, 0.4);
+    }
+    .btn-share-large { background: var(--color-secundario); color: white; }
+    .btn-share-large:hover {
+      background: var(--color-secundario-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(26, 71, 49, 0.4);
+    }
+
+    /* Modal de Donantes */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--color-fondo-modal);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal-content {
+      background: var(--color-fondo);
+      border-radius: var(--radio-borde);
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow: hidden;
+      box-shadow: var(--sombra-fuerte);
+      transform: scale(0.9) translateY(20px);
+      transition: transform 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+    .modal-header {
+      padding: 20px;
+      border-bottom: 2px solid #f3f4f6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      flex-shrink: 0;
+    }
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-texto);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-title .icon { font-size: 24px; }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: var(--color-texto-secundario);
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+    .modal-close:hover { background: #f3f4f6; color: var(--color-texto); transform: rotate(90deg); }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+    .donors-list { list-style: none; }
+    .donor-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #f9fafb;
+      border-radius: 10px;
+      border-left: 3px solid var(--color-primario);
+      animation: fadeInUp 0.5s ease forwards;
+      opacity: 0;
+    }
+    .donor-item:hover { background: var(--color-item-hover); transform: translateX(4px); }
+    .donor-item:nth-child(1) { border-left-color: #fbbf24; }
+    .donor-item:nth-child(2) { border-left-color: #9ca3af; }
+    .donor-item:nth-child(3) { border-left-color: #b45309; }
+    .donor-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+    .donor-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--color-primario), #059669);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      overflow: hidden;
+      border: 2px solid white;
+    }
+    .donor-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .donor-item:nth-child(1) .donor-avatar { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+    .donor-item:nth-child(2) .donor-avatar { background: linear-gradient(135deg, #9ca3af, #6b7280); }
+    .donor-item:nth-child(3) .donor-avatar { background: linear-gradient(135deg, #b45309, #92400e); }
+    .donor-details { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; flex: 1; }
+    .donor-name { font-weight: 600; color: var(--color-texto); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+    .donor-message { font-size: 12px; color: var(--color-texto-secundario); margin-top: 2px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+    .donor-amount { font-weight: 700; color: var(--color-primario); font-size: 16px; white-space: nowrap; margin-left: 10px; }
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 2px solid #f3f4f6;
+      background: #fafafa;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal-footer-info { text-align: center; font-size: 13px; color: var(--color-texto-secundario); }
+    .modal-footer-info strong { color: var(--color-texto); font-size: 15px; }
+    .modal-donate-btn {
+      width: 100%;
+      padding: 16px 24px;
+      border: none;
+      border-radius: 30px;
+      background: linear-gradient(135deg, var(--color-primario) 0%, #059669 100%);
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 16px rgba(2, 169, 92, 0.3);
+    }
+    .modal-donate-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(2, 169, 92, 0.5);
+    }
+    .modal-donate-btn .btn-heart { font-size: 22px; animation: heartbeat 1.5s ease-in-out infinite; }
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      15% { transform: scale(1.15); }
+      30% { transform: scale(1); }
+      45% { transform: scale(1.1); }
+    }
+    .modal-donate-btn .btn-arrow { font-size: 20px; transition: transform 0.3s; }
+    .modal-donate-btn:hover .btn-arrow { transform: translateX(4px); }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Modal de Pago Stripe */
+    .payment-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      overflow-y: auto;
+      padding: 20px 10px;
+    }
+    .payment-modal-overlay.active { opacity: 1; visibility: visible; }
+    .payment-modal {
+      background: white;
+      max-width: 600px;
+      width: 100%;
+      margin: 20px auto;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+      transform: scale(0.9) translateY(30px);
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .payment-modal-overlay.active .payment-modal { transform: scale(1) translateY(0); }
+    .payment-header {
+      background: white;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e0e0e0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .payment-back {
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: #333;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+    .payment-back:hover { background: #f0f0f0; color: var(--color-primario); }
+    .payment-back:active { background: #e0e0e0; transform: scale(0.95); }
+    .payment-logo {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--color-primario);
+      letter-spacing: -0.5px;
+    }
+    .payment-lang-toggle {
+      background: #f0f0f0;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #333;
+      transition: all 0.2s;
+    }
+    .payment-lang-toggle:hover { background: #e0e0e0; }
+    .payment-body { padding: 24px 20px 30px; }
+    .payment-campaign-title {
+      font-size: 26px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.2;
+      margin-bottom: 10px;
+      color: #1a1a1a;
+    }
+    .payment-campaign-subtitle {
+      text-align: center;
+      font-size: 15px;
+      color: #555;
+      margin-bottom: 24px;
+      font-weight: 500;
+    }
+    .payment-section-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: #1a1a1a;
+    }
+    .donation-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .donation-btn {
+      padding: 16px 10px;
+      border: 2px solid #d0d0d0;
+      border-radius: 12px;
+      background: white;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      position: relative;
+      color: #1a1a1a;
+      font-family: var(--fuente);
+    }
+    .donation-btn:hover { border-color: var(--color-primario); background: #f0faf4; }
+    .donation-btn.active {
+      background: var(--color-primario);
+      border-color: var(--color-primario);
+      color: white;
+    }
+    .donation-btn .suggested-badge {
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #e8f5e9;
+      color: var(--color-primario);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 10px;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .donation-btn.active .suggested-badge { background: #e8f5e9; color: var(--color-primario); }
+    .custom-amount-wrapper {
+      border: 2px solid #d0d0d0;
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      transition: border-color 0.2s;
+      background: white;
+    }
+    .custom-amount-wrapper:focus-within {
+      border-color: #4a90d9;
+      box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);
+    }
+    .custom-amount-wrapper.error {
+      border-color: #e74c3c;
+      box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.15);
+    }
+    .currency-label { display: flex; flex-direction: column; align-items: flex-start; }
+    .currency-symbol { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+    .currency-code { font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; }
+    .custom-amount-input {
+      font-size: 32px;
+      font-weight: 700;
+      border: none;
+      outline: none;
+      text-align: right;
+      width: 180px;
+      color: #1a1a1a;
+      background: transparent;
+      font-family: var(--fuente);
+    }
+    .custom-amount-input::placeholder { color: #ccc; }
+    .error-message {
+      color: #e74c3c;
+      font-size: 13px;
+      margin-bottom: 12px;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+    }
+    .error-message.show { display: flex; }
+    .error-message::before { content: '⚠'; font-size: 14px; }
+    .payment-recent-donation {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+      margin-bottom: 20px;
+      animation: fadeIn 0.3s ease;
+    }
+    .recent-donation-info { display: flex; align-items: center; gap: 10px; }
+    .donation-heart { font-size: 20px; }
+    .donation-text { font-size: 14px; color: #555; }
+    .donation-text strong { color: #1a1a1a; }
+    .recent-donation-close {
+      font-size: 16px;
+      color: #999;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px;
+    }
+    .voluntary-section { margin-top: 8px; margin-bottom: 20px; }
+    .voluntary-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #1a1a1a;
+    }
+    .voluntary-description {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+    .voluntary-description strong { color: #333; }
+    .slider-container { position: relative; margin-bottom: 14px; padding: 8px 0; }
+    .slider-value-display { text-align: center; margin-bottom: 14px; }
+    .slider-value-box {
+      display: inline-block;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a1a1a;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: all 0.15s ease-out;
+    }
+    .slider-value-box.updating {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(2, 169, 92, 0.2);
+    }
+    .slider-track {
+      position: relative;
+      height: 8px;
+      background: #e8e8e8;
+      border-radius: 4px;
+      cursor: pointer;
+      overflow: visible;
+    }
+    .slider-fill {
+      position: absolute;
+      height: 100%;
+      background: linear-gradient(90deg, var(--color-primario) 0%, #02c96d 100%);
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(2, 169, 92, 0.3);
+    }
+    .slider-thumb {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 26px;
+      height: 26px;
+      background: white;
+      border: 3px solid var(--color-primario);
+      border-radius: 50%;
+      cursor: grab;
+      box-shadow: 0 2px 8px rgba(2, 169, 92, 0.4);
+      z-index: 10;
+    }
+    .slider-thumb::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      background: var(--color-primario);
+      border-radius: 50%;
+    }
+    .slider-thumb:active { cursor: grabbing; transform: translate(-50%, -50%) scale(1.15); }
+    .custom-tip-link { text-align: center; margin-top: 14px; }
+    .custom-tip-link a {
+      color: #333;
+      font-size: 13px;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .custom-tip-link a:hover { color: var(--color-primario); }
+    .payment-summary-box {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-top: 14px;
+      animation: slideDown 0.3s ease-out;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 14px;
+      color: #555;
+    }
+    .summary-row.total {
+      border-top: 1px solid #ddd;
+      margin-top: 8px;
+      padding-top: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      color: #1a1a1a;
+    }
+    .payment-donate-button {
+      width: 100%;
+      padding: 16px;
+      background: var(--color-primario);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 18px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(2, 169, 92, 0.3);
+      font-family: var(--fuente);
+    }
+    .payment-donate-button:hover {
+      background: var(--color-primario-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(2, 169, 92, 0.4);
+    }
+    .payment-donate-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .payment-donate-button .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .payment-secure-note {
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    @media (max-width: 480px) {
+      .payment-modal-overlay { padding: 10px 6px; }
+      .payment-modal { margin: 10px auto; border-radius: 14px; }
+      .payment-header { padding: 12px 16px; }
+      .payment-logo { font-size: 20px; }
+      .payment-body { padding: 20px 16px 26px; }
+      .payment-campaign-title { font-size: 22px; }
+      .payment-campaign-subtitle { font-size: 14px; }
+      .donation-btn { padding: 14px 8px; font-size: 16px; }
+      .custom-amount-input { font-size: 26px; width: 140px; }
+      .slider-thumb { width: 24px; height: 24px; }
+      .payment-donate-button { font-size: 16px; padding: 14px; }
+    }
+
+    @media (max-width: 360px) {
+      .payment-campaign-title { font-size: 20px; }
+      .donation-grid { grid-template-columns: repeat(2, 1fr); }
+      .custom-amount-input { font-size: 22px; width: 120px; }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-fondo: #1a1a1a;
+        --color-texto: #ffffff;
+        --color-texto-secundario: #9ca3af;
+        --color-fondo-circulo: #374151;
+        --color-boton-donar: #065f46;
+        --color-texto-boton-donar: #ffffff;
+        --color-item-hover: #2d2d2d;
+      }
+      body { background: linear-gradient(135deg, #1f2937 0%, #111827 100%); }
+      .widget-header { background: #1a1a1a; border-bottom-color: #374151; }
+      .campaign-description { background: #2d2d2d; }
+      .description-header { border-bottom-color: #374151; }
+      .description-fade { background: linear-gradient(to bottom, transparent, #2d2d2d); }
+      .donors-info { background: #2d2d2d; }
+      .donors-info:hover { background: #374151; }
+      .donors-carousel-indicators .carousel-dot { background: #4b5563; }
+      .donors-carousel-indicators .carousel-dot.active { background: #34d399; }
+      .buttons-container { border-bottom-color: #374151; }
+      .modal-header { background: linear-gradient(135deg, #064e3b 0%, #065f46 100%); }
+      .modal-title { color: white; }
+      .donor-item { background: #2d2d2d; }
+      .donor-item:hover { background: #374151; }
+      .modal-footer { background: #2d2d2d; border-top-color: #374151; }
+      .donor-avatar { border-color: #374151; }
+      .donations-section { background: #1a1a1a; }
+      .donation-item { border-bottom-color: #374151; }
+      .btn-featured { background: #2d2d2d; border-color: #4b5563; color: white; }
+      .btn-featured:hover { background: #374151; border-color: #34d399; color: #34d399; }
+      .btn-view-all { background: #2d2d2d; border-color: #34d399; color: #34d399; }
+      .btn-view-all:hover { background: var(--color-primario); color: white; }
+      .fundraising-card { background: #1a1a1a; }
+      .card-chart-container .chart-bg { stroke: #374151; }
+      .btn-donate-large { background: #bef264; color: #1a1a1a; }
+      .btn-donate-large:hover { background: var(--color-primario); color: white; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      .carousel-slide img { transform: none; }
+      .fundraising-card { opacity: 1; transform: none; }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Tu contenido de la página -->
-  <header>
-    <h1>Mi Página Web</h1>
-    <p>Bienvenido a mi sitio de recaudación</p>
-  </header>
-
-  <!-- 👇 WIDGET DE RECAUDACIÓN -->
   <div class="fundraising-widget">
-    
-    <div class="chart-container">
-      <svg class="chart-svg" viewBox="0 0 80 80">
-        <circle class="chart-bg" cx="40" cy="40" r="36" />
-        <circle class="chart-progress" id="progressRing" cx="40" cy="40" r="36" />
-      </svg>
-      <div class="percentage-display">
-        <span id="percentValue">0</span><span class="percent-symbol">%</span>
+    <div class="widget-header">
+      <div class="widget-logo">
+        <div class="widget-logo-icon">G</div>
+        <span>gofundme</span>
       </div>
     </div>
 
-    <div class="info-section">
-      <div class="raised-amount">
-        Se recaudaron <span id="raisedValue">$0</span>
+    <div class="campaign-hero" id="campaignHero">
+      <div class="carousel-container">
+        <div class="carousel-slides" id="carouselSlides"></div>
+        <div class="hero-overlay"></div>
+        <div class="campaign-badge" id="campaignBadge">
+          <span>🔥</span>
+          <span id="badgeText">En progreso</span>
+        </div>
+        <div class="carousel-counter" id="carouselCounter">
+          <span id="currentSlide">1</span> / <span id="totalSlides">5</span>
+        </div>
+        <div class="hero-title">
+          <h2 id="heroTitleText">Ayúdanos a alcanzar nuestra meta</h2>
+        </div>
+        <button class="carousel-nav carousel-prev" onclick="prevSlide()" aria-label="Imagen anterior">‹</button>
+        <button class="carousel-nav carousel-next" onclick="nextSlide()" aria-label="Imagen siguiente">›</button>
+        <div class="carousel-dots" id="carouselDots"></div>
+        <div class="carousel-progress" id="carouselProgress"></div>
       </div>
-      <div class="goal-amount">
-        de <span class="goal-value" id="goalValue">$0</span>
+    </div>
+
+    <div class="widget-content">
+      <div class="chart-container" onclick="openDonorsModal()" tabindex="0" onkeypress="handleChartKeyPress(event)" role="button" aria-label="Ver lista de donantes">
+        <svg class="chart-svg" viewBox="0 0 80 80">
+          <circle class="chart-bg" cx="40" cy="40" r="37.5" />
+          <circle class="chart-progress" id="progressRing" cx="40" cy="40" r="37.5" />
+        </svg>
+        <div class="percentage-display">
+          <span id="percentValue">0</span><span class="percent-symbol">%</span>
+        </div>
       </div>
-      <div class="donors-info" onclick="openDonorsModal()" tabindex="0" onkeypress="handleKeyPress(event)" role="button" aria-label="Ver lista de donantes">
-        <span id="donorName">Christine Helse...</span> y otras
-        <span id="donorCount">0</span> personas donaron
-        <span class="arrow">›</span>
+
+      <div class="info-section">
+        <div class="raised-amount">
+          Se recaudaron <span id="raisedValue">$0</span>
+        </div>
+        <div class="goal-amount">
+          de <span class="goal-value" id="goalValue">$0</span>
+        </div>
+        <div class="donors-info" onclick="openDonorsModal()" tabindex="0" onkeypress="handleKeyPress(event)" role="button" aria-label="Ver lista de donantes">
+          <div class="donor-carousel" id="donorCarousel"></div>
+          <span> y otras <span id="donorCount">0</span> personas donaron</span>
+          <span class="arrow">›</span>
+        </div>
+        <div class="donors-carousel-indicators" id="carouselIndicators"></div>
       </div>
     </div>
 
     <div class="buttons-container">
-      <button class="btn btn-donar" onclick="handleDonate()" aria-label="Donar ahora">Donar</button>
-      <button class="btn btn-compartir" onclick="handleShare()" aria-label="Compartir campaña">Compartir</button>
+      <button class="btn btn-donar" onclick="openPaymentModal()" aria-label="Donar ahora">
+        <span>💚</span>
+        <span>Donar</span>
+      </button>
+      <button class="btn btn-compartir" onclick="handleShare()" aria-label="Compartir campaña">
+        Compartir
+      </button>
     </div>
 
+    <div class="campaign-description">
+      <div class="description-header">
+        <span class="description-icon">📖</span>
+        <span class="description-title">Sobre esta campaña</span>
+      </div>
+      <div class="description-content" id="descriptionContent">
+        <div class="description-text" id="descriptionText"></div>
+        <div class="description-fade"></div>
+      </div>
+      <button class="description-toggle" id="descriptionToggle" onclick="toggleDescription()" aria-expanded="false">
+        <span id="toggleText">Leer más</span>
+        <span class="arrow">▼</span>
+      </button>
+    </div>
+
+    <div class="donations-section">
+      <div class="donations-header">
+        <h3 class="donations-title">
+          Donaciones
+          <span class="donations-count">689</span>
+        </h3>
+        <button class="btn-featured" onclick="viewFeatured()" aria-label="Ver destacadas">
+          <span>☆</span>
+          <span>Ver destacadas</span>
+        </button>
+      </div>
+      <div class="recent-donations-label">36 donaciones recientes</div>
+      <div class="donations-list">
+        <div class="donation-item">
+          <div class="donation-avatar heart">🫶</div>
+          <div class="donation-info">
+            <div class="donation-name">Anónimo</div>
+            <div class="donation-details">$10 · Donación reciente</div>
+          </div>
+        </div>
+        <div class="donation-item">
+          <div class="donation-avatar letter">T</div>
+          <div class="donation-info">
+            <div class="donation-name">Tom Whittle</div>
+            <div class="donation-details">$141 · 4 hrs</div>
+          </div>
+        </div>
+        <div class="donation-item">
+          <div class="donation-avatar letter">L</div>
+          <div class="donation-info">
+            <div class="donation-name">Lesvia Yac</div>
+            <div class="donation-details">$50 · 9 hrs</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-view-all" onclick="openDonorsModal()" aria-label="Ver todas las donaciones">
+        <span>Ver todo</span>
+        <span class="arrow-icon">→</span>
+      </button>
+    </div>
+
+    <div class="fundraising-card" id="fundraisingCard">
+      <div class="fundraising-card-content">
+        <div class="card-chart-container">
+          <svg viewBox="0 0 80 80">
+            <circle class="chart-bg" cx="40" cy="40" r="37.5" />
+            <circle class="chart-progress card-chart-progress" id="cardProgressRing" cx="40" cy="40" r="37.5" />
+          </svg>
+          <div class="percentage">
+            <span id="cardPercentValue">0</span><span class="percent-symbol">%</span>
+          </div>
+        </div>
+        <div class="fundraising-info">
+          <div class="fundraising-amount">Se recaudaron <span id="cardRaisedValue">$0</span></div>
+          <div class="fundraising-goal">de <span class="goal-amount" id="cardGoalValue">$0</span></div>
+          <div class="fundraising-recent" onclick="openDonorsModal()">Lesvia Yac donados $50 ›</div>
+        </div>
+      </div>
+      <div class="fundraising-buttons">
+        <button class="btn-large btn-donate-large" onclick="openPaymentModal()" aria-label="Donar ahora">
+          <span>💚</span>
+          <span>Donar</span>
+        </button>
+        <button class="btn-large btn-share-large" onclick="handleShare()" aria-label="Compartir campaña">
+          Compartir
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- 👇 MODAL DE DONANTES -->
-  <div class="modal-overlay" id="donorsModal" onclick="closeModalOnOverlay(event)" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <!-- Modal de Donantes -->
+  <div class="modal-overlay" id="donorsModal" onclick="closeModalOnOverlay(event)" role="dialog" aria-modal="true">
     <div class="modal-content" onclick="event.stopPropagation()">
       <div class="modal-header">
-        <h2 class="modal-title" id="modalTitle">
+        <h2 class="modal-title">
           <span class="icon">👥</span>
           Personas que donaron
         </h2>
         <button class="modal-close" onclick="closeDonorsModal()" aria-label="Cerrar modal">&times;</button>
       </div>
-      
       <div class="modal-body">
-        <ul class="donors-list" id="donorsList" role="list">
-          <!-- Los donantes se insertan aquí dinámicamente -->
-        </ul>
+        <ul class="donors-list" id="donorsList" role="list"></ul>
       </div>
-      
       <div class="modal-footer">
-        Total: <strong id="totalDonorsModal">0</strong> personas han contribuido
+        <div class="modal-footer-info">
+          Total: <strong id="totalDonorsModal">0</strong> personas han contribuido
+        </div>
+        <button class="modal-donate-btn" onclick="openPaymentModalFromDonors()" aria-label="Donar ahora">
+          <span class="btn-heart">💚</span>
+          <span>¡Dona ahora y sé parte del cambio!</span>
+          <span class="btn-arrow">→</span>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- 👇 ENLAZAR EL JAVASCRIPT DEL WIDGET (al final del body) -->
-  <script src="widget.js"></script>
+  <!-- Modal de Pago Stripe -->
+  <div class="payment-modal-overlay" id="paymentModalOverlay" onclick="closePaymentModalOnOverlay(event)">
+    <div class="payment-modal" onclick="event.stopPropagation()">
+      <div class="payment-header">
+        <button class="payment-back" onclick="closePaymentModal()" aria-label="Volver">‹</button>
+        <span class="payment-logo">gofundme</span>
+        <button class="payment-lang-toggle" id="paymentLangToggle" onclick="togglePaymentLang()">🌐 EN</button>
+      </div>
+
+      <div class="payment-body">
+        <h1 class="payment-campaign-title" id="paymentCampaignTitle">Ayuda a cumplir el sueño de Luis</h1>
+        <p class="payment-campaign-subtitle" id="paymentCampaignSubtitle">Todavía faltan $5511. Ayúdanos a generar impulso.</p>
+
+        <h2 class="payment-section-title" id="paymentSectionTitle">Indica la donación</h2>
+
+        <div class="donation-grid" id="donationGrid">
+          <button class="donation-btn" data-amount="50">$50</button>
+          <button class="donation-btn" data-amount="100">$100</button>
+          <button class="donation-btn active" data-amount="200">
+            $200
+            <span class="suggested-badge">💚 SUGERIDO</span>
+          </button>
+          <button class="donation-btn" data-amount="300">$300</button>
+          <button class="donation-btn" data-amount="500">$500</button>
+          <button class="donation-btn" data-amount="1000">$1000</button>
+        </div>
+
+        <div class="custom-amount-wrapper" id="amountWrapper">
+          <div class="currency-label">
+            <span class="currency-symbol">$</span>
+            <span class="currency-code">USD</span>
+          </div>
+          <input 
+            type="text" 
+            class="custom-amount-input" 
+            id="customAmount" 
+            value="200.00" 
+            placeholder="0.00"
+            inputmode="decimal"
+          >
+        </div>
+
+        <div class="error-message" id="errorMessage">La donación mínima es de $5.00</div>
+
+        <div class="payment-recent-donation" id="paymentRecentDonation">
+          <div class="recent-donation-info">
+            <span class="donation-heart">🤍</span>
+            <span class="donation-text" id="paymentDonationText"><strong>Hanane J.</strong> donados $20</span>
+          </div>
+          <button class="recent-donation-close" onclick="closePaymentRecentDonation()">✕</button>
+        </div>
+
+        <div class="voluntary-section">
+          <h2 class="voluntary-title" id="voluntaryTitle">Aporte voluntario a los servicios de GoFundMe</h2>
+          <p class="voluntary-description" id="voluntaryDescription">
+            GoFundMe aplica una comisión de la plataforma del <strong>0%</strong> a los organizadores. GoFundMe seguirá ofreciendo sus servicios gracias a una cantidad opcional que dejarán los donantes aquí:
+          </p>
+
+          <div class="slider-container">
+            <div class="slider-value-display">
+              <div class="slider-value-box" id="sliderValueBox">16.5% ($33.00)</div>
+            </div>
+            <div class="slider-track" id="sliderTrack">
+              <div class="slider-fill" id="sliderFill" style="width: 55%"></div>
+              <div class="slider-thumb" id="sliderThumb" style="left: 55%"></div>
+            </div>
+          </div>
+
+          <div class="custom-tip-link">
+            <a href="#" id="customTipLink" onclick="setCustomTip(event)">Indica tu aporte personalizado</a>
+          </div>
+        </div>
+
+        <div class="payment-summary-box" id="summaryBox">
+          <div class="summary-row">
+            <span id="summaryDonationLabel">Donación</span>
+            <span id="summaryDonation">$200.00</span>
+          </div>
+          <div class="summary-row">
+            <span><span id="summaryTipLabel">Aporte a GoFundMe</span> (<span id="tipPercentDisplay">16.5</span>%)</span>
+            <span id="summaryTip">$33.00</span>
+          </div>
+          <div class="summary-row total">
+            <span id="summaryTotalLabel">Total</span>
+            <span id="summaryTotal">$233.00</span>
+          </div>
+        </div>
+
+        <button class="payment-donate-button" id="paymentDonateBtn" onclick="processStripePayment()">
+          Pagar $233.00
+        </button>
+
+        <div class="payment-secure-note">
+          🔒 Pago seguro procesado por Stripe
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      // ⚠️ CAMBIA ESTA URL por la de tu backend en Render
+      const BACKEND_URL = 'https://stripe-backend-luis.onrender.com';
+      
+      const CARRUSEL_IMAGENES = [
+        { url: "https://i.ibb.co/mCkXCZCq/IMG-6909-2-2-3-1.jpg"},
+        { url: "https://i.ibb.co/PZmskMz7/prueba-3-1-3-1.jpg", alt: "Imagen 2" },
+        { url: "https://i.ibb.co/mCkXCZCq/IMG-6909-2-2-3-1.jpg", alt: "Imagen 3" },
+        { url: "https://i.ibb.co/rG8y5xtK/IMG-6905.jpg", alt: "Imagen 4" },
+        { url: "https://i.ibb.co/gxNKNjb/IMG-6910.jpg", alt: "Imagen 5" }
+      ];
+
+      const TITULO_CAMPANA = { titulo: "Un brazo nuevo para Mireya" };
+
+      const DESCRIPCION_CAMPANA = {
+        titulo: "Sobre esta campaña",
+        icono: "📖",
+        texto: `Mireya es una abuela ejemplar que trabaja duro en un basurero reciclando junto a su nieto para poder sobrevivir. 
+
+A pesar de su esfuerzo, la vida le ha puesto una prueba muy dura: 
+
+Sufrió una lesión que dejó uno de sus brazos con menos del 10% de movilidad.😭
+
+Con la esperanza de un futuro mejor, Mireya buscó empleo en varias empresas, pero en lugar de una oportunidad, recibió humillaciones y rechazos crueles por su discapacidad física.
+
+¿Cómo puedes ser parte de su milagro? ❤️
+
+El costo de la operación, los especialistas y la rehabilitación es inalcanzable para ella. Hoy necesitamos de tu gran corazón para devolverle la esperanza:
+
+- Dona lo que dictamine tu corazón: Ningún monto es pequeño, cada moneda cuenta para su cirugía y el sustento de su nieto mientras se recupera.
+- Comparte su historia: Si no puedes donar, ayúdanos a difundir esta campaña con tus amigos y familiares. Tu voz puede llegar a la persona indicada.
+
+Mireya no se rinde, y con tu ayuda, volverá a sonreír y a salir adelante. ¡Gracias por tu generosidad y por compartir! Que Dios te bendiga.`,
+        leerMas: "Leer más",
+        verMenos: "Ver menos"
+      };
+
+      const IMAGEN_CAMPANA = { badge: "En progreso", badgeIcon: "🔥" };
+
+      const DONANTES = [
+        { nombre: "María González", monto: 500, mensaje: "¡Ánimo!", avatar: "https://i.pravatar.cc/100?img=1" },
+        { nombre: "Carlos Rodríguez", monto: 35, mensaje: "Con cariño", avatar: "https://i.pravatar.cc/100?img=3" },
+        { nombre: "Ana Martínez", monto: 100, mensaje: "", avatar: "https://i.pravatar.cc/100?img=5" },
+        { nombre: "Juan Pérez", monto: 25, mensaje: "¡Éxitos!", avatar: "https://i.pravatar.cc/100?img=8" },
+        { nombre: "Laura Sánchez", monto: 20, mensaje: "Para ayudar", avatar: "https://i.pravatar.cc/100?img=9" },
+        { nombre: "Roberto Lima", monto: 10, mensaje: "" },
+        { nombre: "Patricia Torres", monto: 50, mensaje: "Un granito", avatar: "https://i.pravatar.cc/100?img=16" },
+        { nombre: "Miguel Ángel", monto: 100, mensaje: "¡Fuerza!", avatar: "https://i.pravatar.cc/100?img=12" },
+        { nombre: "Carmen Flores", monto: 70, mensaje: "", avatar: "https://i.pravatar.cc/100?img=20" },
+        { nombre: "Diego Ramírez", monto: 40, mensaje: "Saludos", avatar: "https://i.pravatar.cc/100?img=15" }
+      ];
+
+      const CONFIG = {
+        recaudado: 1800,
+        objetivo: 4000,
+        donantes: 28,
+        nombreDonante: "Christine Helse...",
+        duracionAnimacion: 2000,
+        formatoMoneda: "USD",
+        intervaloCarrusel: 3000,
+        intervaloImagenes: 5000,
+      };
+
+      const translations = {
+        es: {
+          campaignTitle: "Un brazo nuevo para Mireya",
+          campaignSubtitle: "Todavía faltan $2200. Ayúdanos a generar impulso.",
+          sectionTitle: "Indica la donación",
+          suggested: "💚 SUGERIDO",
+          errorMessage: "La donación mínima es de $5.00",
+          donated: "donados",
+          voluntaryTitle: "Aporte voluntario a los servicios de GoFundMe",
+          voluntaryDescription: 'GoFundMe aplica una comisión de la plataforma del <strong>0%</strong> a los organizadores. GoFundMe seguirá ofreciendo sus servicios gracias a una cantidad opcional que dejarán los donantes aquí:',
+          customTipLink: "Indica tu aporte personalizado",
+          summaryDonation: "Donación",
+          summaryTip: "Aporte a GoFundMe",
+          summaryTotal: "Total",
+          payButton: "Pagar",
+          processingButton: "Procesando...",
+          errorPayment: "Hubo un error al procesar tu pago. Por favor intenta de nuevo.",
+          promptCustomTip: "Indica tu aporte personalizado (%):",
+          langToggleText: "EN",
+          secureNote: "🔒 Pago seguro procesado por Stripe"
+        },
+        en: {
+          campaignTitle: "A new arm for Mireya",
+          campaignSubtitle: "Still missing $2200. Help us build momentum.",
+          sectionTitle: "Select donation amount",
+          suggested: "💚 SUGGESTED",
+          errorMessage: "The minimum donation is $5.00",
+          donated: "donated",
+          voluntaryTitle: "Voluntary contribution to GoFundMe services",
+          voluntaryDescription: 'GoFundMe applies a platform fee of <strong>0%</strong> to organizers. GoFundMe will continue to offer its services thanks to an optional amount left by donors here:',
+          customTipLink: "Enter your custom contribution",
+          summaryDonation: "Donation",
+          summaryTip: "GoFundMe contribution",
+          summaryTotal: "Total",
+          payButton: "Pay",
+          processingButton: "Processing...",
+          errorPayment: "There was an error processing your payment. Please try again.",
+          promptCustomTip: "Enter your custom contribution (%):",
+          langToggleText: "ES",
+          secureNote: "🔒 Secure payment processed by Stripe"
+        }
+      };
+
+      let currentLang = 'es';
+      let currentAmount = 200;
+      let currentTipPercent = 16.5;
+      let isDragging = false;
+      let donorIndex = 0;
+
+      const paymentDonors = [
+        { name: 'Hanane J.', amount: 20 },
+        { name: 'Arath A.', amount: 25 },
+        { name: 'Isidoro H.', amount: 25 },
+        { name: 'Miguel A.', amount: 25 },
+        { name: 'Mariana M.', amount: 50 },
+        { name: 'Sarah H.', amount: 7 },
+        { name: 'Yolanda G.', amount: 10 }
+      ];
+
+      let currentImageIndex = 0;
+      let imageCarouselInterval = null;
+      let isTransitioning = false;
+      let touchStartX = 0;
+      let touchEndX = 0;
+
+      function initImageCarousel() {
+        const slidesContainer = document.getElementById('carouselSlides');
+        const dotsContainer = document.getElementById('carouselDots');
+        const totalSlidesEl = document.getElementById('totalSlides');
+
+        if (!slidesContainer || CARRUSEL_IMAGENES.length === 0) return;
+
+        slidesContainer.innerHTML = '';
+        dotsContainer.innerHTML = '';
+        totalSlidesEl.textContent = CARRUSEL_IMAGENES.length;
+
+        CARRUSEL_IMAGENES.forEach((img, index) => {
+          const slide = document.createElement('div');
+          slide.className = 'carousel-slide' + (index === 0 ? ' active' : '');
+          const imgElement = document.createElement('img');
+          imgElement.src = img.url;
+          imgElement.alt = img.alt || '';
+          imgElement.loading = index === 0 ? 'eager' : 'lazy';
+          slide.appendChild(imgElement);
+          slidesContainer.appendChild(slide);
+
+          const dot = document.createElement('button');
+          dot.className = 'carousel-dot' + (index === 0 ? ' active' : '');
+          dot.setAttribute('aria-label', `Ir a imagen ${index + 1}`);
+          dot.onclick = () => goToSlide(index);
+          dotsContainer.appendChild(dot);
+        });
+
+        startImageCarousel();
+        setupImageCarouselEvents();
+      }
+
+      function goToSlide(index) {
+        if (isTransitioning) return;
+        const slidesContainer = document.getElementById('carouselSlides');
+        const slides = slidesContainer.querySelectorAll('.carousel-slide');
+        const dots = document.querySelectorAll('#carouselDots .carousel-dot');
+        const currentSlideEl = document.getElementById('currentSlide');
+
+        if (index < 0) index = CARRUSEL_IMAGENES.length - 1;
+        if (index >= CARRUSEL_IMAGENES.length) index = 0;
+
+        isTransitioning = true;
+        currentImageIndex = index;
+
+        slides.forEach((slide, i) => slide.classList.toggle('active', i === index));
+        slidesContainer.style.transform = `translateX(-${index * 100}%)`;
+        dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+        currentSlideEl.textContent = index + 1;
+        resetProgressBar();
+        setTimeout(() => { isTransitioning = false; }, 600);
+      }
+
+      window.nextSlide = function() { goToSlide(currentImageIndex + 1); restartImageCarousel(); };
+      window.prevSlide = function() { goToSlide(currentImageIndex - 1); restartImageCarousel(); };
+
+      function startImageCarousel() {
+        if (imageCarouselInterval) clearInterval(imageCarouselInterval);
+        imageCarouselInterval = setInterval(() => goToSlide(currentImageIndex + 1), CONFIG.intervaloImagenes);
+        startProgressBar();
+      }
+
+      function stopImageCarousel() {
+        if (imageCarouselInterval) { clearInterval(imageCarouselInterval); imageCarouselInterval = null; }
+        pauseProgressBar();
+      }
+
+      function restartImageCarousel() { stopImageCarousel(); startImageCarousel(); }
+
+      function startProgressBar() {
+        const progressBar = document.getElementById('carouselProgress');
+        progressBar.classList.remove('animating');
+        progressBar.style.width = '0';
+        void progressBar.offsetWidth;
+        progressBar.classList.add('animating');
+      }
+
+      function pauseProgressBar() {
+        const progressBar = document.getElementById('carouselProgress');
+        progressBar.classList.remove('animating');
+        progressBar.style.width = window.getComputedStyle(progressBar).width;
+      }
+
+      function resetProgressBar() {
+        const progressBar = document.getElementById('carouselProgress');
+        progressBar.classList.remove('animating');
+        progressBar.style.width = '0';
+        void progressBar.offsetWidth;
+        progressBar.classList.add('animating');
+      }
+
+      function setupImageCarouselEvents() {
+        const hero = document.getElementById('campaignHero');
+        hero.addEventListener('mouseenter', stopImageCarousel);
+        hero.addEventListener('mouseleave', startImageCarousel);
+        hero.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; stopImageCarousel(); }, { passive: true });
+        hero.addEventListener('touchend', (e) => {
+          touchEndX = e.changedTouches[0].screenX;
+          const diff = touchStartX - touchEndX;
+          if (Math.abs(diff) > 50) { diff > 0 ? nextSlide() : prevSlide(); }
+          startImageCarousel();
+        }, { passive: true });
+      }
+
+      let donorCarouselIndex = 0;
+      let donorCarouselInterval = null;
+
+      function initDonorCarousel() {
+        const carousel = document.getElementById('donorCarousel');
+        const indicators = document.getElementById('carouselIndicators');
+        if (!carousel || DONANTES.length === 0) return;
+
+        carousel.innerHTML = '';
+        indicators.innerHTML = '';
+
+        DONANTES.forEach((donor, index) => {
+          const item = document.createElement('span');
+          item.className = 'donor-carousel-item' + (index === 0 ? ' active' : '');
+          item.textContent = donor.nombre;
+          carousel.appendChild(item);
+
+          const dot = document.createElement('span');
+          dot.className = 'carousel-dot' + (index === 0 ? ' active' : '');
+          indicators.appendChild(dot);
+        });
+
+        startDonorCarousel();
+      }
+
+      function startDonorCarousel() {
+        if (donorCarouselInterval) clearInterval(donorCarouselInterval);
+        donorCarouselInterval = setInterval(nextDonor, CONFIG.intervaloCarrusel);
+      }
+
+      function stopDonorCarousel() {
+        if (donorCarouselInterval) { clearInterval(donorCarouselInterval); donorCarouselInterval = null; }
+      }
+
+      function nextDonor() {
+        const items = document.querySelectorAll('.donor-carousel-item');
+        const dots = document.querySelectorAll('#carouselIndicators .carousel-dot');
+        if (items.length === 0) return;
+        items[donorCarouselIndex].classList.remove('active');
+        dots[donorCarouselIndex].classList.remove('active');
+        donorCarouselIndex = (donorCarouselIndex + 1) % items.length;
+        items[donorCarouselIndex].classList.add('active');
+        dots[donorCarouselIndex].classList.add('active');
+      }
+
+      function formatCurrency(amount) {
+        return new Intl.NumberFormat('en-US', {
+          style: 'currency', currency: CONFIG.formatoMoneda,
+          minimumFractionDigits: 0, maximumFractionDigits: 0,
+        }).format(amount);
+      }
+
+      function formatAmount(num) { return parseFloat(num).toFixed(2); }
+
+      function getInitials(name) {
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      }
+
+      function calculatePercentage(raised, goal) {
+        return Math.min((raised / goal) * 100, 100);
+      }
+
+      function animateCounter(elementId, start, end, duration, isCurrency) {
+        const element = document.getElementById(elementId);
+        const startTime = performance.now();
+        function update(currentTime) {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          const current = Math.round(start + (end - start) * eased);
+          element.textContent = isCurrency ? formatCurrency(current) : current.toLocaleString('en-US');
+          if (progress < 1) requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+      }
+
+      function animateWidget() {
+        const percentage = calculatePercentage(CONFIG.recaudado, CONFIG.objetivo);
+        const circumference = 2 * Math.PI * 37.5;
+        const offset = circumference - (percentage / 100) * circumference;
+
+        const progressRing = document.getElementById('progressRing');
+        progressRing.style.strokeDasharray = circumference;
+        progressRing.style.strokeDashoffset = circumference;
+        progressRing.offsetHeight;
+        requestAnimationFrame(() => {
+          progressRing.style.transition = `stroke-dashoffset ${CONFIG.duracionAnimacion}ms cubic-bezier(0.4, 0, 0.2, 1)`;
+          progressRing.style.strokeDashoffset = offset;
+        });
+
+        animateCounter('percentValue', 0, Math.round(percentage), CONFIG.duracionAnimacion, false);
+        animateCounter('raisedValue', 0, CONFIG.recaudado, CONFIG.duracionAnimacion, true);
+        document.getElementById('goalValue').textContent = formatCurrency(CONFIG.objetivo);
+        animateCounter('donorCount', 0, CONFIG.donantes, CONFIG.duracionAnimacion, false);
+      }
+
+      function animateCardChart() {
+        const percentage = calculatePercentage(CONFIG.recaudado, CONFIG.objetivo);
+        const circumference = 2 * Math.PI * 37.5;
+        const offset = circumference - (percentage / 100) * circumference;
+
+        const cardProgressRing = document.getElementById('cardProgressRing');
+        cardProgressRing.style.strokeDasharray = circumference;
+        cardProgressRing.style.strokeDashoffset = circumference;
+        cardProgressRing.offsetHeight;
+        requestAnimationFrame(() => {
+          cardProgressRing.style.transition = `stroke-dashoffset ${CONFIG.duracionAnimacion}ms cubic-bezier(0.4, 0, 0.2, 1)`;
+          cardProgressRing.style.strokeDashoffset = offset;
+        });
+
+        animateCounter('cardPercentValue', 0, Math.round(percentage), CONFIG.duracionAnimacion, false);
+        animateCounter('cardRaisedValue', 0, CONFIG.recaudado, CONFIG.duracionAnimacion, true);
+        document.getElementById('cardGoalValue').textContent = formatCurrency(CONFIG.objetivo);
+      }
+
+      function setupScrollAnimation() {
+        const card = document.getElementById('fundraisingCard');
+        if (!card) return;
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              card.classList.add('visible');
+              setTimeout(animateCardChart, 200);
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.2, rootMargin: '0px 0px -50px 0px' });
+        observer.observe(card);
+      }
+
+      function renderDonorsList() {
+        const list = document.getElementById('donorsList');
+        const totalDonorsElement = document.getElementById('totalDonorsModal');
+        list.innerHTML = '';
+
+        DONANTES.forEach((donor, index) => {
+          const li = document.createElement('li');
+          li.className = 'donor-item';
+          li.style.animationDelay = `${index * 0.08}s`;
+
+          const messageHtml = donor.mensaje ? `<span class="donor-message">"${donor.mensaje}"</span>` : '';
+          const avatarHtml = donor.avatar
+            ? `<div class="donor-avatar"><img src="${donor.avatar}" alt="${donor.nombre}" onerror="this.parentElement.innerHTML='${getInitials(donor.nombre)}'"></div>`
+            : `<div class="donor-avatar">${getInitials(donor.nombre)}</div>`;
+
+          li.innerHTML = `
+            <div class="donor-info">
+              ${avatarHtml}
+              <div class="donor-details">
+                <span class="donor-name">${donor.nombre}</span>
+                ${messageHtml}
+              </div>
+            </div>
+            <span class="donor-amount">${formatCurrency(donor.monto)}</span>
+          `;
+          list.appendChild(li);
+        });
+
+        totalDonorsElement.textContent = CONFIG.donantes;
+      }
+
+      window.openDonorsModal = function() {
+        renderDonorsList();
+        document.getElementById('donorsModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        stopDonorCarousel();
+      };
+
+      window.closeDonorsModal = function() {
+        document.getElementById('donorsModal').classList.remove('active');
+        document.body.style.overflow = '';
+        startDonorCarousel();
+      };
+
+      window.closeModalOnOverlay = function(event) {
+        if (event.target === event.currentTarget) closeDonorsModal();
+      };
+
+      window.viewFeatured = function() { openDonorsModal(); };
+
+      function t(key) { return translations[currentLang][key] || key; }
+
+      function applyPaymentTranslations() {
+        document.getElementById('paymentCampaignTitle').textContent = t('campaignTitle');
+        document.getElementById('paymentCampaignSubtitle').textContent = t('campaignSubtitle');
+        document.getElementById('paymentSectionTitle').textContent = t('sectionTitle');
+        document.getElementById('voluntaryTitle').textContent = t('voluntaryTitle');
+        document.getElementById('voluntaryDescription').innerHTML = t('voluntaryDescription');
+        document.getElementById('customTipLink').textContent = t('customTipLink');
+        document.getElementById('summaryDonationLabel').textContent = t('summaryDonation');
+        document.getElementById('summaryTipLabel').textContent = t('summaryTip');
+        document.getElementById('summaryTotalLabel').textContent = t('summaryTotal');
+        document.getElementById('errorMessage').textContent = t('errorMessage');
+        document.getElementById('paymentLangToggle').innerHTML = `🌐 ${t('langToggleText')}`;
+        updatePaymentRecentDonation();
+        updatePayButtonText();
+      }
+
+      function updatePaymentRecentDonation() {
+        const donor = paymentDonors[donorIndex % paymentDonors.length];
+        document.getElementById('paymentDonationText').innerHTML = 
+          `<strong>${donor.name}.</strong> ${t('donated')} $${donor.amount}`;
+      }
+
+      function updatePayButtonText() {
+        const tipAmount = (currentAmount * currentTipPercent / 100);
+        const total = currentAmount + tipAmount;
+        document.getElementById('paymentDonateBtn').textContent = `${t('payButton')} $${formatAmount(total)}`;
+      }
+
+      function smoothUpdateSlider(percent) {
+        const tipAmount = (currentAmount * percent / 100);
+        const sliderValueBox = document.getElementById('sliderValueBox');
+        
+        sliderValueBox.classList.add('updating');
+        sliderValueBox.textContent = `${percent.toFixed(1)}% ($${formatAmount(tipAmount)})`;
+        setTimeout(() => sliderValueBox.classList.remove('updating'), 150);
+
+        const percentPosition = (percent / 30) * 100;
+        document.getElementById('sliderFill').style.width = `${percentPosition}%`;
+        document.getElementById('sliderThumb').style.left = `${percentPosition}%`;
+
+        document.getElementById('summaryDonation').textContent = `$${formatAmount(currentAmount)}`;
+        document.getElementById('tipPercentDisplay').textContent = percent.toFixed(1);
+        document.getElementById('summaryTip').textContent = `$${formatAmount(tipAmount)}`;
+        document.getElementById('summaryTotal').textContent = `$${formatAmount(currentAmount + tipAmount)}`;
+      }
+
+      function updatePaymentUI() {
+        smoothUpdateSlider(currentTipPercent);
+        const amountWrapper = document.getElementById('amountWrapper');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        if (currentAmount < 5 && currentAmount > 0) {
+          errorMessage.classList.add('show');
+          amountWrapper.classList.add('error');
+        } else {
+          errorMessage.classList.remove('show');
+          amountWrapper.classList.remove('error');
+        }
+      }
+
+      function setAmount(amount, btn) {
+        currentAmount = amount;
+        document.getElementById('customAmount').value = formatAmount(amount);
+        document.querySelectorAll('#donationGrid .donation-btn').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        updatePaymentUI();
+        updatePayButtonText();
+      }
+
+      function initPaymentModal() {
+        document.querySelectorAll('#donationGrid .donation-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const amount = parseFloat(btn.dataset.amount);
+            setAmount(amount, btn);
+          });
+        });
+
+        const customAmountInput = document.getElementById('customAmount');
+        customAmountInput.addEventListener('input', (e) => {
+          let value = e.target.value.replace(/[^0-9.]/g, '');
+          const parts = value.split('.');
+          if (parts.length > 2) value = parts[0] + '.' + parts.slice(1).join('');
+          if (parts[1] && parts[1].length > 2) value = parts[0] + '.' + parts[1].substring(0, 2);
+          e.target.value = value;
+
+          const numValue = parseFloat(value);
+          if (!isNaN(numValue) && numValue > 0) {
+            currentAmount = numValue;
+            document.querySelectorAll('#donationGrid .donation-btn').forEach(b => b.classList.remove('active'));
+          } else {
+            currentAmount = 0;
+          }
+          updatePaymentUI();
+          updatePayButtonText();
+        });
+
+        customAmountInput.addEventListener('blur', (e) => {
+          let value = parseFloat(e.target.value);
+          if (isNaN(value) || value <= 0) {
+            e.target.value = '0.00';
+            currentAmount = 0;
+          } else {
+            e.target.value = formatAmount(value);
+          }
+          updatePaymentUI();
+          updatePayButtonText();
+        });
+
+        const sliderTrack = document.getElementById('sliderTrack');
+        const sliderThumb = document.getElementById('sliderThumb');
+
+        function updateSliderFromEvent(e) {
+          const rect = sliderTrack.getBoundingClientRect();
+          let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+          if (clientX === undefined) return;
+          let x = clientX - rect.left;
+          let percent = (x / rect.width) * 30;
+          percent = Math.max(0, Math.min(30, percent));
+          currentTipPercent = Math.round(percent * 10) / 10;
+          smoothUpdateSlider(currentTipPercent);
+          updatePayButtonText();
+        }
+
+        function handleStart(e) {
+          isDragging = true;
+          e.preventDefault();
+        }
+
+        function handleMove(e) {
+          if (!isDragging) return;
+          updateSliderFromEvent(e);
+        }
+
+        function handleEnd() { isDragging = false; }
+
+        sliderThumb.addEventListener('mousedown', handleStart);
+        sliderTrack.addEventListener('mousedown', handleStart);
+        sliderThumb.addEventListener('touchstart', handleStart, { passive: false });
+        sliderTrack.addEventListener('touchstart', handleStart, { passive: false });
+        document.addEventListener('mousemove', handleMove);
+        document.addEventListener('touchmove', handleMove, { passive: false });
+        document.addEventListener('mouseup', handleEnd);
+        document.addEventListener('touchend', handleEnd);
+
+        sliderTrack.addEventListener('click', (e) => { if (!isDragging) updateSliderFromEvent(e); });
+
+        setInterval(() => {
+          if (document.getElementById('paymentModalOverlay').classList.contains('active')) {
+            donorIndex++;
+            updatePaymentRecentDonation();
+          }
+        }, 4000);
+
+        applyPaymentTranslations();
+        updatePaymentUI();
+        updatePayButtonText();
+      }
+
+      window.openPaymentModal = function() {
+        document.getElementById('paymentModalOverlay').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        const suggestedBtn = document.querySelector('#donationGrid .donation-btn.active') || 
+                             document.querySelector('#donationGrid .donation-btn[data-amount="200"]');
+        if (suggestedBtn) {
+          setAmount(parseFloat(suggestedBtn.dataset.amount), suggestedBtn);
+        }
+      };
+
+      window.openPaymentModalFromDonors = function() {
+        closeDonorsModal();
+        setTimeout(openPaymentModal, 300);
+      };
+
+      window.closePaymentModal = function() {
+        document.getElementById('paymentModalOverlay').classList.remove('active');
+        document.body.style.overflow = '';
+      };
+
+      window.closePaymentModalOnOverlay = function(event) {
+        if (event.target === event.currentTarget) closePaymentModal();
+      };
+
+      window.closePaymentRecentDonation = function() {
+        document.getElementById('paymentRecentDonation').style.display = 'none';
+      };
+
+      window.togglePaymentLang = function() {
+        currentLang = currentLang === 'es' ? 'en' : 'es';
+        applyPaymentTranslations();
+      };
+
+      window.setCustomTip = function(e) {
+        e.preventDefault();
+        const customTip = prompt(t('promptCustomTip'), currentTipPercent.toFixed(1));
+        if (customTip !== null) {
+          const val = parseFloat(customTip);
+          if (!isNaN(val) && val >= 0 && val <= 30) {
+            currentTipPercent = val;
+            updatePaymentUI();
+            updatePayButtonText();
+          }
+        }
+      };
+
+      // 🎯 PROCESAR PAGO CON STRIPE
+      window.processStripePayment = async function() {
+        if (currentAmount < 5) {
+          document.getElementById('errorMessage').classList.add('show');
+          document.getElementById('amountWrapper').classList.add('error');
+          document.getElementById('customAmount').focus();
+          return;
+        }
+
+        const tipAmount = (currentAmount * currentTipPercent / 100);
+        const total = currentAmount + tipAmount;
+
+        const donateBtn = document.getElementById('paymentDonateBtn');
+        const originalText = donateBtn.textContent;
+        donateBtn.disabled = true;
+        donateBtn.innerHTML = `<span class="spinner"></span>${t('processingButton')}`;
+
+        try {
+          const response = await fetch(`${BACKEND_URL}/create-checkout-session`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              amount: currentAmount,
+              tip: tipAmount,
+              total: total,
+              campaignName: t('campaignTitle'),
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Error al crear la sesión de pago');
+          }
+
+          const { url } = await response.json();
+          // Redirigir a Stripe Checkout
+          window.location.href = url;
+
+        } catch (error) {
+          console.error('Error:', error);
+          alert(t('errorPayment') + '\n\n' + error.message);
+          donateBtn.disabled = false;
+          donateBtn.textContent = originalText;
+        }
+      };
+
+      window.toggleDescription = function() {
+        const content = document.getElementById('descriptionContent');
+        const toggle = document.getElementById('descriptionToggle');
+        const toggleText = document.getElementById('toggleText');
+        const isExpanded = content.classList.contains('expanded');
+
+        if (isExpanded) {
+          content.classList.remove('expanded');
+          toggleText.textContent = DESCRIPCION_CAMPANA.leerMas || 'Leer más';
+          toggle.setAttribute('aria-expanded', 'false');
+        } else {
+          content.classList.add('expanded');
+          toggleText.textContent = DESCRIPCION_CAMPANA.verMenos || 'Ver menos';
+          toggle.setAttribute('aria-expanded', 'true');
+        }
+      };
+
+      function loadCampaignTitle() {
+        const heroTitle = document.getElementById('heroTitleText');
+        if (TITULO_CAMPANA.titulo) heroTitle.textContent = TITULO_CAMPANA.titulo;
+      }
+
+      function loadCampaignDescription() {
+        const descriptionText = document.getElementById('descriptionText');
+        const descriptionTitle = document.querySelector('.description-title');
+        const descriptionIcon = document.querySelector('.description-icon');
+        const toggleText = document.getElementById('toggleText');
+
+        if (DESCRIPCION_CAMPANA.titulo) descriptionTitle.textContent = DESCRIPCION_CAMPANA.titulo;
+        if (DESCRIPCION_CAMPANA.icono) descriptionIcon.textContent = DESCRIPCION_CAMPANA.icono;
+        if (DESCRIPCION_CAMPANA.leerMas) toggleText.textContent = DESCRIPCION_CAMPANA.leerMas;
+
+        if (DESCRIPCION_CAMPANA.texto) {
+          const paragraphs = DESCRIPCION_CAMPANA.texto.split('\n\n');
+          let html = '';
+          paragraphs.forEach(paragraph => {
+            if (paragraph.includes('•')) {
+              const items = paragraph.split('\n').filter(line => line.trim().startsWith('•'));
+              if (items.length > 0) {
+                html += '<ul>';
+                items.forEach(item => { html += `<li>${item.replace('•', '').trim()}</li>`; });
+                html += '</ul>';
+              } else {
+                html += `<p>${paragraph.replace(/\n/g, '<br>')}</p>`;
+              }
+            } else {
+              html += `<p>${paragraph.replace(/\n/g, '<br>')}</p>`;
+            }
+          });
+          descriptionText.innerHTML = html;
+        }
+      }
+
+      function loadCampaignBadge() {
+        const badge = document.getElementById('campaignBadge');
+        const badgeText = document.getElementById('badgeText');
+        if (IMAGEN_CAMPANA.badgeIcon) badge.querySelector('span:first-child').textContent = IMAGEN_CAMPANA.badgeIcon;
+        if (IMAGEN_CAMPANA.badge) badgeText.textContent = IMAGEN_CAMPANA.badge;
+      }
+
+      window.handleShare = function() {
+        const shareData = {
+          title: TITULO_CAMPANA.titulo,
+          text: `${DESCRIPCION_CAMPANA.texto.substring(0, 100)}...\n\nSe han recaudado ${formatCurrency(CONFIG.recaudado)} de ${formatCurrency(CONFIG.objetivo)}. ¡Dona ahora!`,
+          url: window.location.href,
+        };
+        if (navigator.share) {
+          navigator.share(shareData).catch(() => {});
+        } else {
+          navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('🔗 ¡Enlace copiado al portapapeles!');
+          });
+        }
+      };
+
+      function handleKeyPress(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openDonorsModal();
+        }
+      }
+
+      function handleChartKeyPress(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openDonorsModal();
+        }
+      }
+
+      window.handleChartKeyPress = handleChartKeyPress;
+
+      document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+          const paymentModal = document.getElementById('paymentModalOverlay');
+          if (paymentModal.classList.contains('active')) {
+            closePaymentModal();
+            return;
+          }
+          const donorsModal = document.getElementById('donorsModal');
+          if (donorsModal.classList.contains('active')) {
+            closeDonorsModal();
+          }
+        }
+      });
+
+      document.addEventListener('DOMContentLoaded', () => {
+        loadCampaignTitle();
+        loadCampaignBadge();
+        loadCampaignDescription();
+        initImageCarousel();
+        initDonorCarousel();
+        initPaymentModal();
+        setTimeout(animateWidget, 300);
+        setupScrollAnimation();
+      });
+
+    })();
+  </script>
 
 </body>
 </html>
