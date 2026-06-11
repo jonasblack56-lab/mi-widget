@@ -408,12 +408,17 @@
         </div>
     </div>
 
+    <!-- Stripe JS -->
+    <script src="https://js.stripe.com/v3/"></script>
     <script>
         // ============================================
         // CONFIGURACIÓN
         // ============================================
-        const REDIRECT_URL = 'https://gohelpyou.com'; // 👈 CAMBIA ESTO por la URL de tu página principal
-        const REDIRECT_SECONDS = 3;
+        const REDIRECT_URL = 'https://gohelpyou.com'; // 👈 URL de tu página principal
+        const REDIRECT_SECONDS = 15;
+        
+        // ✅ ENDPOINT BACKEND EN RENDER (ya configurado)
+        const BACKEND_SESSION_ENDPOINT = 'https://stripe-backend-luis.onrender.com/api/get-stripe-session';
         
         // Traducciones
         const translations = {
@@ -425,7 +430,8 @@
                 seconds: "segundos",
                 button: "Volver ahora",
                 share: "¿Quieres ayudar más?",
-                shareLink: "Comparte esta campaña"
+                shareLink: "Comparte esta campaña",
+                loadingAmount: "Verificando pago..."
             },
             en: {
                 title: "Thank you for your generosity!",
@@ -435,7 +441,8 @@
                 seconds: "seconds",
                 button: "Go back now",
                 share: "Want to help more?",
-                shareLink: "Share this campaign"
+                shareLink: "Share this campaign",
+                loadingAmount: "Verifying payment..."
             }
         };
 
@@ -561,23 +568,77 @@
             }
         }
 
-        // Inicialización
+        // ============================================
+        // 🎯 OBTENER MONTO REAL DE STRIPE
+        // ============================================
+        function formatAmount(amountInCents, currency) {
+            const symbols = {
+                'usd': '$', 'eur': '€', 'mxn': 'MX$', 'cop': 'COP$',
+                'ars': 'ARS$', 'clp': 'CLP$', 'pen': 'S/', 'gbp': '£'
+            };
+            const symbol = symbols[currency.toLowerCase()] || '$';
+            const amount = (amountInCents / 100).toFixed(2);
+            return `${symbol}${amount}`;
+        }
+
+        async function fetchRealAmountFromStripe(sessionId, fallbackAmount) {
+            const amountEl = document.getElementById('thankyouAmount');
+            amountEl.textContent = t('loadingAmount');
+
+            try {
+                const response = await fetch(BACKEND_SESSION_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: sessionId })
+                });
+
+                if (!response.ok) throw new Error('Error al consultar Stripe');
+
+                const data = await response.json();
+                
+                // Stripe devuelve amount_total en centavos
+                if (data.amount_total && data.currency) {
+                    amountEl.textContent = formatAmount(data.amount_total, data.currency);
+                } else if (data.amount !== undefined) {
+                    amountEl.textContent = formatAmount(data.amount, data.currency || 'usd');
+                } else {
+                    throw new Error('Respuesta inválida del backend');
+                }
+            } catch (err) {
+                console.warn('No se pudo obtener el monto real de Stripe, usando fallback:', err);
+                // Fallback: usar el amount de la URL si existe
+                if (fallbackAmount) {
+                    amountEl.textContent = '$' + parseFloat(fallbackAmount).toFixed(2);
+                } else {
+                    amountEl.textContent = '---';
+                }
+            }
+        }
+
+        // ============================================
+        // INICIALIZACIÓN
+        // ============================================
         document.addEventListener('DOMContentLoaded', () => {
-            // Obtener monto de la URL
+            // Obtener parámetros de la URL
             const urlParams = new URLSearchParams(window.location.search);
-            const amount = parseFloat(urlParams.get('amount')) || 0;
+            const sessionId = urlParams.get('session_id');        // 👈 Stripe lo agrega automáticamente
+            const fallbackAmount = urlParams.get('amount');       // 👈 Respuesta de emergencia
             
-            // Mostrar monto
-            document.getElementById('thankyouAmount').textContent = '$' + amount.toFixed(2);
-            
-            // Aplicar traducciones
+            // Aplicar UI
             applyTranslations();
-            
-            // Crear confeti
             createConfetti();
-            
-            // Iniciar countdown
             startCountdown();
+            
+            // Obtener el monto real pagado con Stripe
+            if (sessionId) {
+                fetchRealAmountFromStripe(sessionId, fallbackAmount);
+            } else if (fallbackAmount) {
+                // Fallback si no hay session_id (pruebas locales)
+                document.getElementById('thankyouAmount').textContent = 
+                    '$' + parseFloat(fallbackAmount).toFixed(2);
+            } else {
+                document.getElementById('thankyouAmount').textContent = '---';
+            }
         });
 
         // Tecla ESC para salir
