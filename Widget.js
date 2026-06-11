@@ -24,6 +24,9 @@
     nombreDonante: "Christine Helse...",
     duracionAnimacion: 2000,
     formatoMoneda: "USD",
+    // ✅ NUEVA CONFIGURACIÓN
+    redirectUrl: '/', // URL de la página principal (cambia esto si tu página no está en la raíz)
+    redirectDelay: 5000, // Tiempo en milisegundos antes de redirigir (5 segundos)
   };
 
   // ============================================
@@ -49,6 +52,116 @@
   function getInitials(name) {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   }
+
+  // ============================================
+  //  ✅ DETECCIÓN DE ESTADO DE PAGO
+  // ============================================
+  function checkPaymentStatus() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    const amount = urlParams.get('amount');
+
+    if (paymentStatus === 'success') {
+      // ✅ PAGO EXITOSO: Mostrar agradecimiento y redirigir
+      showThankYouMessage(amount);
+      // Limpiar URL después de mostrar el mensaje
+      cleanUrl();
+    } else if (paymentStatus === 'cancel') {
+      // ❌ PAGO CANCELADO: Redirigir inmediatamente
+      console.log('Pago cancelado por el usuario');
+      cleanUrl();
+      // Opcional: mostrar mensaje de cancelación
+      // alert('El pago fue cancelado. Puedes intentar de nuevo cuando quieras.');
+    }
+  }
+
+  // ✅ LIMPIAR URL (eliminar parámetros ?payment=...)
+  function cleanUrl() {
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+  }
+
+  // ✅ MOSTRAR MENSAJE DE AGRADECIMIENTO
+  function showThankYouMessage(amount) {
+    // Crear overlay de agradecimiento
+    const overlay = document.createElement('div');
+    overlay.className = 'thankyou-overlay';
+    overlay.innerHTML = `
+      <div class="confetti-container" id="confettiContainer"></div>
+      <div class="thankyou-content">
+        <div class="thankyou-icon-wrapper">
+          <span class="thankyou-icon">✅</span>
+        </div>
+        <h1 class="thankyou-title">¡Gracias por tu generosidad!</h1>
+        <p class="thankyou-message">
+          Tu donación ha sido procesada exitosamente. Tu apoyo hace la diferencia.
+        </p>
+        <div class="thankyou-amount-box">
+          <div class="thankyou-amount-label">Monto donado</div>
+          <div class="thankyou-amount">$${amount || '0.00'}</div>
+        </div>
+        <div class="thankyou-redirect">
+          Serás redirigido automáticamente en <span class="thankyou-countdown" id="countdown">${CONFIG.redirectDelay / 1000}</span> segundos
+        </div>
+        <div class="thankyou-progress-bar">
+          <div class="thankyou-progress-fill"></div>
+        </div>
+        <button class="thankyou-button" onclick="redirectNow()">
+          Volver ahora
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Activar animación
+    setTimeout(() => {
+      overlay.classList.add('active');
+      createConfetti();
+      startCountdown();
+    }, 100);
+  }
+
+  // ✅ CREAR CONFETI
+  function createConfetti() {
+    const container = document.getElementById('confettiContainer');
+    if (!container) return;
+
+    const colors = ['#02a95c', '#fbbf24', '#ef4444', '#3b82f6', '#a855f7', '#ec4899'];
+    
+    for (let i = 0; i < 50; i++) {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = Math.random() * 100 + '%';
+      confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.animationDelay = Math.random() * 2 + 's';
+      confetti.style.animationDuration = (Math.random() * 2 + 3) + 's';
+      container.appendChild(confetti);
+    }
+  }
+
+  // ✅ CONTADOR REGRESIVO
+  function startCountdown() {
+    let seconds = CONFIG.redirectDelay / 1000;
+    const countdownEl = document.getElementById('countdown');
+    
+    const interval = setInterval(() => {
+      seconds--;
+      if (countdownEl) {
+        countdownEl.textContent = seconds;
+      }
+      
+      if (seconds <= 0) {
+        clearInterval(interval);
+        redirectNow();
+      }
+    }, 1000);
+  }
+
+  // ✅ REDIRIGIR AHORA
+  window.redirectNow = function() {
+    window.location.href = CONFIG.redirectUrl;
+  };
 
   // ============================================
   //  ANIMACIONES
@@ -173,6 +286,20 @@
   //  BOTONES
   // ============================================
   window.handleDonate = function() {
+    // ✅ AQUÍ DEBES INTEGRAR TU PASARELA DE PAGOS
+    // Ejemplo con Stripe:
+    /*
+    fetch('/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: 100 })
+    })
+    .then(response => response.json())
+    .then(data => {
+      window.location.href = data.url;
+    });
+    */
+    
     alert('🎉 ¡Gracias por tu interés en donar!\n\nIntegra aquí tu pasarela de pagos.');
   };
 
@@ -223,11 +350,14 @@
   };
 
   // ============================================
-  //  INICIALIZACIÓN
+  //  ✅ INICIALIZACIÓN CON DETECCIÓN DE PAGO
   // ============================================
   document.addEventListener('DOMContentLoaded', () => {
+    // ✅ PRIMERO: Verificar si viene de un pago
+    checkPaymentStatus();
+    
+    // Luego: Animar el widget normalmente
     setTimeout(animateWidget, 300);
   });
 
 })();
-
